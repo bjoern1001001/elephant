@@ -420,7 +420,7 @@ class HilbertTestCase(unittest.TestCase):
         self.assertRaises(ValueError, elephant.signal_processing.hilbert,
                           self.dummy_ansig, pad_type=pad_type)
 
-    def test_hilbert_output_length(self):
+    def test_hilbert_output_shape(self):
         """
         Tests if the length of the output is identical to the original signal
         """
