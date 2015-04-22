@@ -406,6 +406,10 @@ class HilbertTestCase(unittest.TestCase):
                                             sampling_period)])
     dummy_ansig = neo.AnalogSignalArray(signal.reshape(-1, 1), units=pq.mV,
                                         sampling_period=sampling_period * pq.s)
+    dummy_ansig_short = neo.AnalogSignalArray(signal[:100].reshape(-1, 1),
+                                              units=pq.mV,
+                                              sampling_period=
+                                                  sampling_period * pq.s)
 
     def test_hilbert_pad_type_error(self):
         """
@@ -415,6 +419,19 @@ class HilbertTestCase(unittest.TestCase):
 
         self.assertRaises(ValueError, elephant.signal_processing.hilbert,
                           self.dummy_ansig, pad_type=pad_type)
+
+    def test_hilbert_output_length(self):
+        """
+        Tests if the length of the output is identical to the original signal
+        """
+        true_shape = np.shape(self.dummy_ansig_short)
+        output = elephant.signal_processing.hilbert(self.dummy_ansig_short,
+                                                    pad_type='zero')
+        self.assertEquals(np.shape(output), true_shape)
+        output = elephant.signal_processing.hilbert(self.dummy_ansig_short,
+                                                    pad_type='signal')
+        self.assertEquals(np.shape(output), true_shape)
+
 
 
 if __name__ == '__main__':
