@@ -395,5 +395,27 @@ class ButterTestCase(unittest.TestCase):
             filtered_noise_neo1d.magnitude ==
             filtered_noise_neo.T.magnitude[0]))
 
+
+class HilbertTestCase(unittest.TestCase):
+    # generate dummy data of a sinusoid
+    data_length = 4096
+    sampling_period = 0.001
+    signal_freq = 1 / 0.4096
+    signal = np.asarray([np.sin(2*np.pi*signal_freq*t)
+                         for t in np.arange(0, data_length*sampling_period,
+                                            sampling_period)])
+    dummy_ansig = neo.AnalogSignalArray(signal.reshape(-1, 1), units=pq.mV,
+                                        sampling_period=sampling_period * pq.s)
+
+    def test_hilbert_pad_type_error(self):
+        """
+        Tests if incorrect pad_type raises ValueError.
+        """
+        pad_type = 'wrong_type'
+
+        self.assertRaises(ValueError, elephant.signal_processing.hilbert,
+                          self.dummy_ansig, pad_type=pad_type)
+
+
 if __name__ == '__main__':
     unittest.main()
