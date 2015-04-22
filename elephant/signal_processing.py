@@ -233,3 +233,32 @@ def butter(signal, highpass_freq=None, lowpass_freq=None, order=4,
         return filtered_data * signal.units
     else:
         return filtered_data
+
+def applyhilbert(ansig):
+    '''
+    Apply a Hilbert transform to an AnalogSignal in order to obtains its
+    (complex) analytic signal.
+
+    Parameters
+    -----------
+    signal : neo.AnalogSignal
+        Signal to transform.
+
+    Returns
+    -------
+    neo.AnalogSignal
+        Contains the analytic signal.
+    '''
+
+    # To speed up calculation of the Hilbert transform, make sure we change the
+    # signal to be of a length that is a power of two. Failure to do so results
+    # in computations of certain signal lengths to not finish (or finish in
+    # absurd time).
+    n_org = len(ansig.magnitude)
+    n_opt = int(math.pow(2, math.ceil(math.log(n_org) / math.log(2))))
+
+    # Right-pad signal to desired length using the signal itself
+    s = np.hstack((ansig.magnitude, ansig.magnitude[:n_opt - n_org]))
+
+    return ansig.duplicate_with_new_array(
+        scipy.signal.hilbert(s, N=n_opt)[:n_org])
