@@ -265,12 +265,13 @@ def hilbert(ansig, pad_type = 'zero'):
 
     # Right-pad signal to desired length using the signal itself
     if pad_type == 'signal':
-        s = np.hstack((ansig.magnitude, ansig.magnitude[:n_opt - n_org]))
+        s = np.vstack((ansig.magnitude, ansig.magnitude[:, :n_opt - n_org]))
     elif pad_type == 'zero':
-        s = np.hstack((ansig.magnitude, np.zeros(n_opt - n_org)))
+        s = np.vstack((ansig.magnitude, np.zeros((n_opt - n_org,
+                                                  ansig.shape[1]))))
     else:
         raise ValueError("'{}' is an unknown pad_type. Possible: 'zero' or "
                          "'signal'.".format(pad_type))
 
     return ansig.duplicate_with_new_array(
-        scipy.signal.hilbert(s, N=n_opt)[:n_org])
+        scipy.signal.hilbert(s, N=n_opt, axis=0)[:n_org])
