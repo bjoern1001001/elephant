@@ -448,7 +448,7 @@ class HilbertTestCase(unittest.TestCase):
 
             # True phase of the dummy signal
             true_phase = [((2*np.pi*t*self.signal_freq - np.pi/2) + np.pi)
-                            %(2*np.pi) -np.pi for t in times]
+                            %(2*np.pi) -np.pi for t in self.times]
             true_phase = np.asarray(true_phase).reshape(-1,1)
 
             # Interval to perform tests on to avoid border effects
