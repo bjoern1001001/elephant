@@ -399,11 +399,11 @@ class ButterTestCase(unittest.TestCase):
 class HilbertTestCase(unittest.TestCase):
     # generate dummy data of a sinusoid
     data_length = 4096
-    sampling_period = 0.001
-    signal_freq = 1 / 0.4096
-    signal = np.asarray([np.sin(2*np.pi*signal_freq*t)
-                         for t in np.arange(0, data_length*sampling_period,
-                                            sampling_period)])
+    sampling_period = 1. / 256.
+    signal_freq = 1 / 0.512
+    times = np.arange(0, data_length*sampling_period, sampling_period)
+
+    signal = np.asarray([np.sin(2*np.pi*signal_freq*t) for t in times])
     dummy_ansig = neo.AnalogSignalArray(signal.reshape(-1, 1), units=pq.mV,
                                         sampling_period=sampling_period * pq.s)
     dummy_ansig_short = neo.AnalogSignalArray(signal[:100].reshape(-1, 1),
@@ -431,6 +431,39 @@ class HilbertTestCase(unittest.TestCase):
         output = elephant.signal_processing.hilbert(self.dummy_ansig_short,
                                                     pad_type='signal')
         self.assertEquals(np.shape(output), true_shape)
+
+    def test_hilbert_behaviour(self):
+        """
+        Tests the output of the hilbert function with regard to amplitude and
+        phase.
+        """
+        # Precision of amplitude and phase tests
+        decimal = 10**(-2)
+
+        # Performing test using both pad types
+        for pad_type in ['zero','signal']:
+            # hilbert transformed dummy signal
+            output = elephant.signal_processing.hilbert(self.dummy_ansig,
+                                                        pad_type=pad_type)
+
+            # True phase of the dummy signal
+            true_phase = [((2*np.pi*t*self.signal_freq - np.pi/2) + np.pi)
+                            %(2*np.pi) -np.pi for t in times]
+            true_phase = np.asarray(true_phase).reshape(-1,1)
+
+            # Interval to perform tests on to avoid border effects
+            index_min = int(0.2*self.data_length)
+            index_max = int(0.8*self.data_length)
+
+            # Testing if reconstructed phase matches to phase of dummy signal
+            phase_diff = np.angle(np.exp((np.angle(output)[index_min:index_max]
+                                           - true_phase[index_min:index_max])*1.0j))
+            self.assertTrue(np.all(phase_diff < decimal))
+
+            # Testing if reconstructed amplitude is close to 1 (amp. of dummy signal)
+            amplitude_diff = np.abs(np.abs(output.magnitude[index_min:index_max])-1)
+            self.assertTrue(np.all(amplitude_diff < decimal))
+
 
 
 
