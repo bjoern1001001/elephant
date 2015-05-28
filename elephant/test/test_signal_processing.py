@@ -398,15 +398,20 @@ class ButterTestCase(unittest.TestCase):
 
 class HilbertTestCase(unittest.TestCase):
     # generate dummy data of a sinusoid
-    data_length = 4096
-    sampling_period = 1. / 256.
-    signal_freq = 1 / 0.512
+    phase = np.arange(0, 2 * np.pi, np.pi / 256)
+    a0 = np.sin(phase)
+    a1 = np.cos(phase)
+    a2 = np.sin(2 * phase)
+    a3 = np.cos(2 * phase)
+    a = np.vstack([a0, a1, a2, a3])
+
+    data_length = len(phase)
+    sampling_period = 1. / data_length
     times = np.arange(0, data_length*sampling_period, sampling_period)
 
-    signal = np.asarray([np.sin(2*np.pi*signal_freq*t) for t in times])
-    dummy_ansig = neo.AnalogSignalArray(signal.reshape(-1, 1), units=pq.mV,
+    dummy_ansig = neo.AnalogSignalArray(a.T, units=pq.mV,
                                         sampling_period=sampling_period * pq.s)
-    dummy_ansig_short = neo.AnalogSignalArray(signal[:100].reshape(-1, 1),
+    dummy_ansig_short = neo.AnalogSignalArray(a[:100].T,
                                               units=pq.mV,
                                               sampling_period=
                                                   sampling_period * pq.s)
@@ -432,39 +437,50 @@ class HilbertTestCase(unittest.TestCase):
                                                     pad_type='signal')
         self.assertEquals(np.shape(output), true_shape)
 
-    def test_hilbert_behaviour(self):
+
+
+    def test_hilbert_theoretical(self):
         """
         Tests the output of the hilbert function with regard to amplitude and
         phase.
+        Copied and adapted from scipy test_signaltools.py
         """
-        # Precision of amplitude and phase tests
-        decimal = 10**(-2)
+        decimal = 14
 
         # Performing test using both pad types
         for pad_type in ['zero','signal']:
-            # hilbert transformed dummy signal
-            output = elephant.signal_processing.hilbert(self.dummy_ansig,
-                                                        pad_type=pad_type)
 
-            # True phase of the dummy signal
-            true_phase = [((2*np.pi*t*self.signal_freq - np.pi/2) + np.pi)
-                            %(2*np.pi) -np.pi for t in self.times]
-            true_phase = np.asarray(true_phase).reshape(-1,1)
+            h = elephant.signal_processing.hilbert(self.dummy_ansig,
+                                                   pad_type=pad_type)
+            h_abs = np.abs(h)
+            h_angle = np.angle(h)
+            h_real = np.real(h)
 
-            # Interval to perform tests on to avoid border effects
-            index_min = int(0.2*self.data_length)
-            index_max = int(0.8*self.data_length)
+            # The real part should be equal to the original signals:
+            assert_array_almost_equal(h_real, self.dummy_ansig, decimal)
+            # The absolute value should be one everywhere, for this input:
+            assert_array_almost_equal(h_abs.magnitude,
+                                      np.ones(self.dummy_ansig.magnitude.shape),
+                                      decimal)
+            # For the 'slow' sine - the phase should go from -pi/2 to pi/2 in
+            # the first 256 bins:
+            assert_array_almost_equal(h_angle[:256,0],
+                                np.arange(-np.pi / 2, np.pi / 2, np.pi / 256),
+                                decimal)
+            # For the 'slow' cosine - the phase should go from 0 to pi in the
+            # same interval:
+            assert_array_almost_equal(
+                h_angle[:256,1], np.arange(0, np.pi, np.pi / 256), decimal)
+            # The 'fast' sine should make this phase transition in half the time:
+            assert_array_almost_equal(h_angle[:128,2],
+                                np.arange(-np.pi / 2, np.pi / 2, np.pi / 128),
+                                decimal)
+            # Ditto for the 'fast' cosine:
+            assert_array_almost_equal(
+                h_angle[:128,3], np.arange(0, np.pi, np.pi / 128), decimal)
 
-            # Testing if reconstructed phase matches to phase of dummy signal
-            phase_diff = np.angle(np.exp((np.angle(output)[index_min:index_max]
-                                           - true_phase[index_min:index_max])*1.0j))
-            self.assertTrue(np.all(phase_diff < decimal))
-
-            # Testing if reconstructed amplitude is close to 1 (amp. of dummy signal)
-            amplitude_diff = np.abs(np.abs(output.magnitude[index_min:index_max])-1)
-            self.assertTrue(np.all(amplitude_diff < decimal))
-
-
+            # The imaginary part of hilbert(cos(t)) = sin(t) Wikipedia
+            assert_array_almost_equal(h[:,1].imag.magnitude, self.a0, decimal)
 
 
 if __name__ == '__main__':

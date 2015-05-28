@@ -241,8 +241,8 @@ def hilbert(ansig, pad_type = 'zero'):
 
     Parameters
     -----------
-    signal : neo.AnalogSignal
-        Signal to transform.
+    ansig : neo.AnalogSignal or neo.AnalogSignalArray
+        Signal(s) to transform.
     pad_type : string
         Defines what is padded to extend the signal length to next power of two
         for an efficient calculation. If 'zero' is defined zeros are padded to
@@ -261,11 +261,11 @@ def hilbert(ansig, pad_type = 'zero'):
     # in computations of certain signal lengths to not finish (or finish in
     # absurd time).
     n_org = len(ansig.magnitude)
-    n_opt = 2 ** (int(np.log2(n_org)) + 1)
+    n_opt = 2 ** (int(np.log2(n_org-1)) + 1)
 
     # Right-pad signal to desired length using the signal itself
     if pad_type == 'signal':
-        s = np.vstack((ansig.magnitude, ansig.magnitude[:, :n_opt - n_org]))
+        s = np.vstack((ansig.magnitude, ansig.magnitude[:n_opt - n_org,:]))
     elif pad_type == 'zero':
         s = np.vstack((ansig.magnitude, np.zeros((n_opt - n_org,
                                                   ansig.shape[1]))))
