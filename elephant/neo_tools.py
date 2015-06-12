@@ -381,7 +381,7 @@ def cut_by_epocharray(selected_epochs, selected_trials, obj,
                 type(ep)))
         if signal_props is None:
             filtered_items = [x for x in parent.children_recur
-                              if type(x) == obj]
+                              if isinstance(x, obj)]
         else:
             filtered_items = parent.filter(targdict=signal_props,
                                            objects=obj)
@@ -390,7 +390,7 @@ def cut_by_epocharray(selected_epochs, selected_trials, obj,
             for i, t in enumerate(selected_trials):
                 if i not in segs:
                     segs[i] = neo.core.Segment()
-                if type(item) is neo.core.AnalogSignal:
+                if isinstance(item, neo.AnalogSignal):
                     if _is_in_range(
                             ep.times[i], ep.durations[i],
                             item.t_start, item.t_stop,
@@ -400,7 +400,7 @@ def cut_by_epocharray(selected_epochs, selected_trials, obj,
                         # check if there is an AnalogSignal
                         if np.size(analog_sig) > 0:
                             segs[i].analogsignals.append(analog_sig)
-                if type(item) is neo.core.SpikeTrain:
+                if isinstance(item, neo.SpikeTrain):
                     if _is_in_range(ep.times[i],
                                     ep.durations[i],
                                     item.t_start, item.t_stop,
@@ -447,11 +447,11 @@ def _cut_analogsignal(ep, fp, reset_times, i):
         ind2 = fp.t_start.magnitude + len(fp)
 
     # setting zero time to beginning of analogsignal
-    if type(reset_times) == bool and reset_times is True:
+    if isinstance(reset_times, bool) and reset_times is True:
         (t_start, t_stop) = (0 * ep.durations[i].units, ep.durations[i])
 
     # keep time stamps of original spiketrain
-    elif type(reset_times == bool) and reset_times is False:
+    elif isinstance(reset_times, bool)and reset_times is False:
         (t_start, t_stop) = (ep.times[i], ep.times[i] + ep.durations[i])
     else:
         raise TypeError(
@@ -488,7 +488,7 @@ def _cut_spiketrain(ep, st, reset_times, i):
         Object couldn't be constructed.
     """
     # setting zero time to beginning of spiketrain
-    if type(reset_times) == bool and reset_times is True:
+    if isinstance(reset_times, bool) and reset_times is True:
         (t_start, t_stop) = (0 * st.units, ep.durations[i])
         spikingtimes = st.times[np.nonzero(
             np.logical_and(
@@ -496,7 +496,7 @@ def _cut_spiketrain(ep, st, reset_times, i):
                 st.times < ep.times[i] + ep.durations[i]))] - \
                        ep.times[i]
     # keep time stamps of original spiketrain
-    elif type(reset_times == bool) and reset_times is False:
+    elif isinstance(reset_times, bool) and reset_times is False:
         (t_start, t_stop) = (ep.times[i], ep.times[i] + ep.durations[i])
         spikingtimes = st.times[np.nonzero(
             np.logical_and(st.times >= ep.times[i],
