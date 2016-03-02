@@ -8,9 +8,14 @@ Function to calculate spike-triggered averages of analog signals.
 
 from __future__ import division
 import numpy as np
+import scipy.signal
 import quantities as pq
+
 from neo.core import AnalogSignalArray, SpikeTrain
+from elephant.conversion import BinnedSpikeTrain
+
 import warnings
+
 
 def spike_triggered_average(signal, spiketrains, window):
     """
@@ -63,7 +68,7 @@ def spike_triggered_average(signal, spiketrains, window):
     # interval relative to a spike
     window_starttime, window_stoptime = window
     if not (isinstance(window_starttime, pq.quantity.Quantity) and
-            window_starttime.dimensionality.simplified == 
+            window_starttime.dimensionality.simplified ==
             pq.Quantity(1, "s").dimensionality):
         raise TypeError("The start time of the window (window[0]) "
                         "must be a time quantity.")
@@ -132,9 +137,9 @@ def spike_triggered_average(signal, spiketrains, window):
     window_bins = int(np.ceil(((window_stoptime - window_starttime) *
         signal.sampling_rate).simplified))
     # result_sta: array containing finally the spike-triggered averaged signal
-    result_sta = AnalogSignalArray(np.zeros((window_bins, num_signals)), 
+    result_sta = AnalogSignalArray(np.zeros((window_bins, num_signals)),
         sampling_rate=signal.sampling_rate, units=signal.units)
-    # setting of correct times of the spike-triggered average 
+    # setting of correct times of the spike-triggered average
     # relative to the spike
     result_sta.t_start = window_starttime
     used_spikes = np.zeros(num_signals, dtype=int)
@@ -146,7 +151,7 @@ def spike_triggered_average(signal, spiketrains, window):
         for spiketime in spiketrains[i]:
             # checks for sufficient signal data around spiketime
             if (spiketime + window_starttime >= signal.t_start and
-                spiketime + window_stoptime <= signal.t_stop):
+                    spiketime + window_stoptime <= signal.t_stop):
                 # calculating the startbin in the analog signal of the
                 # averaging window for spike
                 startbin = int(np.floor(((spiketime + window_starttime -
@@ -171,3 +176,58 @@ def spike_triggered_average(signal, spiketrains, window):
     result_sta.annotate(used_spikes=used_spikes, unused_spikes=unused_spikes)
 
     return result_sta
+
+
+def spike_field_coherence(signal, spiketrain, **kwargs):
+    """
+    Calculates the spike-triggered averages of analog signals in a time window
+    relative to the spike times of a corresponding spiketrain for multiple
+    signals each. The function receives n analog signals and either one or
+    n spiketrains. In case it is one spiketrain this one is muliplied n-fold
+    and used for each of the n analog signals.
+
+    Parameters
+    ----------
+    signal : neo AnalogSignalArray object
+        'signal' contains n analog signals.
+    spiketrain : one SpikeTrain
+        Binned spike train object. The binsize of the binned spike train must
+        match the sampling_rate of signal.
+
+    Returns
+    -------
+    coherence : complex quantities.Quantity array
+    frequencies : quantities.Quantity array
+
+    Examples
+    --------
+
+    >>> signal = neo.AnalogSignalArray(np.array([signal1, signal2]).T, units='mV',
+    ...                                sampling_rate=10/ms)
+    >>> stavg = spike_triggered_average(signal, [spiketrain1, spiketrain2],
+    ...                                 (-5 * ms, 10 * ms))
+
+    """
+
+    # checking the times of signal and spiketrains
+    if spiketrain.t_start < signal.t_start:
+        raise ValueError(
+            "The spiketrain starts earlier than "
+            "the analog signal.")
+    if spiketrain.t_stop > signal.t_stop:
+        raise ValueError(
+            "The spiketrain stops later than "
+            "the analog signal.")
+
+    if spiketrain.binsize != signal.sampling_period:
+        raise ValueError(
+            "The spiketrain and signal must have a common sampling frequency / binsize")
+
+    # *** Main algorithm: ***
+
+    # window_bins: number of bins of the chosen averaging interval
+    frequencies, sfc = scipy.signal.coherence(
+        spiketrain.to_array(), signal.magnitude, fs=signal.sampling_rate,
+        **kwargs)
+
+    return (pq.Quantity(sfc, units=pq.dimensionless), pq.Quantity(frequencies, units=pq.Hz))

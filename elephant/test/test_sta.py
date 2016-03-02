@@ -13,32 +13,34 @@ from numpy.testing import assert_array_equal
 from numpy.testing.utils import assert_array_almost_equal
 import neo
 from neo import AnalogSignalArray, SpikeTrain
+from elephant.conversion import BinnedSpikeTrain
 import quantities as pq
 from quantities import ms, mV, Hz
 import elephant.sta as sta
 import warnings
 
+
 class sta_TestCase(unittest.TestCase):
 
     def setUp(self):
         self.asiga0 = AnalogSignalArray(np.array([
-            np.sin(np.arange(0, 20 * math.pi, 0.1))]).T, 
+            np.sin(np.arange(0, 20 * math.pi, 0.1))]).T,
             units='mV', sampling_rate=10 / ms)
         self.asiga1 = AnalogSignalArray(np.array([
-            np.sin(np.arange(0, 20 * math.pi, 0.1)), 
-            np.cos(np.arange(0, 20 * math.pi, 0.1))]).T, 
+            np.sin(np.arange(0, 20 * math.pi, 0.1)),
+            np.cos(np.arange(0, 20 * math.pi, 0.1))]).T,
             units='mV', sampling_rate=10 / ms)
         self.asiga2 = AnalogSignalArray(np.array([
-            np.sin(np.arange(0, 20 * math.pi, 0.1)), 
-            np.cos(np.arange(0, 20 * math.pi, 0.1)), 
-            np.tan(np.arange(0, 20 * math.pi, 0.1))]).T, 
+            np.sin(np.arange(0, 20 * math.pi, 0.1)),
+            np.cos(np.arange(0, 20 * math.pi, 0.1)),
+            np.tan(np.arange(0, 20 * math.pi, 0.1))]).T,
             units='mV', sampling_rate=10 / ms)
         self.st0 = SpikeTrain(
-            [9 * math.pi, 10 * math.pi, 11 * math.pi, 12 * math.pi], 
+            [9 * math.pi, 10 * math.pi, 11 * math.pi, 12 * math.pi],
             units='ms', t_stop=self.asiga0.t_stop)
         self.lst = [SpikeTrain(
-            [9 * math.pi, 10 * math.pi, 11 * math.pi, 12 * math.pi], 
-            units='ms', t_stop=self.asiga1.t_stop), 
+            [9 * math.pi, 10 * math.pi, 11 * math.pi, 12 * math.pi],
+            units='ms', t_stop=self.asiga1.t_stop),
             SpikeTrain([30, 35, 40], units='ms', t_stop=self.asiga1.t_stop)]
 
     #***********************************************************************
@@ -66,7 +68,7 @@ class sta_TestCase(unittest.TestCase):
         STA = sta.spike_triggered_average(
             self.asiga0, self.st0, (-4 * ms, 4 * ms))
         target = 5e-2 * mV
-        self.assertEqual(np.abs(STA).max().dimensionality.simplified, 
+        self.assertEqual(np.abs(STA).max().dimensionality.simplified,
                          pq.Quantity(1, "V").dimensionality.simplified)
         self.assertLess(np.abs(STA).max(), target)
 
@@ -83,19 +85,18 @@ class sta_TestCase(unittest.TestCase):
         window_endtime = 5 * ms
         STA = sta.spike_triggered_average(
             z, st, (window_starttime, window_endtime))
-        cutout = z[int(((spiketime + window_starttime) * sr).simplified): 
+        cutout = z[int(((spiketime + window_starttime) * sr).simplified):
             int(((spiketime + window_endtime) * sr).simplified)]
         cutout.t_start = window_starttime
         assert_array_equal(STA, cutout)
 
     def test_usage_of_spikes(self):
-        st = SpikeTrain([16.5 * math.pi, 17.5 * math.pi, 
+        st = SpikeTrain([16.5 * math.pi, 17.5 * math.pi,
             18.5 * math.pi, 19.5 * math.pi], units='ms', t_stop=20 * math.pi)
         STA = sta.spike_triggered_average(
             self.asiga0, st, (-math.pi * ms, math.pi * ms))
         self.assertEqual(STA.annotations['used_spikes'], 3)
         self.assertEqual(STA.annotations['unused_spikes'], 1)
-
 
     #***********************************************************************
     #**** Test for an invalid value, to check that the function raises *****
@@ -104,46 +105,46 @@ class sta_TestCase(unittest.TestCase):
     def test_analog_signal_of_wrong_type(self):
         '''Analog signal given as list, but must be AnalogSignalArray'''
         asiga = [0, 1, 2, 3, 4]
-        self.assertRaises(TypeError, sta.spike_triggered_average, 
+        self.assertRaises(TypeError, sta.spike_triggered_average,
             asiga, self.st0, (-2 * ms, 2 * ms))
 
     def test_spiketrain_of_list_type_in_wrong_sense(self):
         st = [10, 11, 12]
-        self.assertRaises(TypeError, sta.spike_triggered_average, 
+        self.assertRaises(TypeError, sta.spike_triggered_average,
             self.asiga0, st, (1 * ms, 2 * ms))
 
     def test_spiketrain_of_nonlist_and_nonspiketrain_type(self):
         st = (10, 11, 12)
-        self.assertRaises(TypeError, sta.spike_triggered_average, 
+        self.assertRaises(TypeError, sta.spike_triggered_average,
             self.asiga0, st, (1 * ms, 2 * ms))
 
     def test_forgotten_AnalogSignalArray_argument(self):
-        self.assertRaises(TypeError, sta.spike_triggered_average, 
+        self.assertRaises(TypeError, sta.spike_triggered_average,
             self.st0, (-2 * ms, 2 * ms))
 
     def test_one_smaller_nrspiketrains_smaller_nranalogsignals(self):
         '''Number of spiketrains between 1 and number of analogsignals'''
-        self.assertRaises(ValueError, sta.spike_triggered_average, 
+        self.assertRaises(ValueError, sta.spike_triggered_average,
             self.asiga2, self.lst, (-2 * ms, 2 * ms))
 
     def test_more_spiketrains_than_analogsignals_forbidden(self):
-        self.assertRaises(ValueError, sta.spike_triggered_average, 
+        self.assertRaises(ValueError, sta.spike_triggered_average,
             self.asiga0, self.lst, (-2 * ms, 2 * ms))
 
     def test_spike_earlier_than_analogsignal(self):
         st = SpikeTrain([-1 * math.pi, 2 * math.pi],
             units='ms', t_start=-2 * math.pi, t_stop=20 * math.pi)
-        self.assertRaises(ValueError, sta.spike_triggered_average, 
+        self.assertRaises(ValueError, sta.spike_triggered_average,
             self.asiga0, st, (-2 * ms, 2 * ms))
 
     def test_spike_later_than_analogsignal(self):
         st = SpikeTrain(
             [math.pi, 21 * math.pi], units='ms', t_stop=25 * math.pi)
-        self.assertRaises(ValueError, sta.spike_triggered_average, 
+        self.assertRaises(ValueError, sta.spike_triggered_average,
             self.asiga0, st, (-2 * ms, 2 * ms))
 
     def test_impossible_window(self):
-        self.assertRaises(ValueError, sta.spike_triggered_average, 
+        self.assertRaises(ValueError, sta.spike_triggered_average,
             self.asiga0, self.st0, (-2 * ms, -5 * ms))
 
     def test_window_larger_than_signal(self):
@@ -151,11 +152,11 @@ class sta_TestCase(unittest.TestCase):
             self.asiga0, self.st0, (-15 * math.pi * ms, 15 * math.pi * ms))
 
     def test_wrong_window_starttime_unit(self):
-        self.assertRaises(TypeError, sta.spike_triggered_average, 
+        self.assertRaises(TypeError, sta.spike_triggered_average,
             self.asiga0, self.st0, (-2 * mV, 2 * ms))
 
     def test_wrong_window_endtime_unit(self):
-        self.assertRaises(TypeError, sta.spike_triggered_average, 
+        self.assertRaises(TypeError, sta.spike_triggered_average,
             self.asiga0, self.st0, (-2 * ms, 2 * Hz))
 
     def test_window_borders_as_complex_numbers(self):
@@ -169,14 +170,14 @@ class sta_TestCase(unittest.TestCase):
     def test_empty_analogsignal(self):
         asiga = AnalogSignalArray([], units='mV', sampling_rate=10 / ms)
         st = SpikeTrain([5], units='ms', t_stop=10)
-        self.assertRaises(ValueError, sta.spike_triggered_average, 
+        self.assertRaises(ValueError, sta.spike_triggered_average,
             asiga, st, (-1 * ms, 1 * ms))
 
     def test_one_spiketrain_empty(self):
         '''Test for one empty SpikeTrain, but existing spikes in other'''
         st = [SpikeTrain(
-            [9 * math.pi, 10 * math.pi, 11 * math.pi, 12 * math.pi], 
-            units='ms', t_stop=self.asiga1.t_stop), 
+            [9 * math.pi, 10 * math.pi, 11 * math.pi, 12 * math.pi],
+            units='ms', t_stop=self.asiga1.t_stop),
             SpikeTrain([], units='ms', t_stop=self.asiga1.t_stop)]
         STA = sta.spike_triggered_average(self.asiga1, st, (-1 * ms, 1 * ms))
         cmp_array = AnalogSignalArray(np.array([np.zeros(20, dtype=float)]).T,
@@ -201,6 +202,58 @@ class sta_TestCase(unittest.TestCase):
                 units='mV', sampling_rate=10 / ms)
             assert_array_equal(STA, cmp_array)
 
+
+class sfc_TestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.asiga0 = AnalogSignalArray(np.array([
+            np.sin(np.arange(0, 20 * math.pi, 0.1))]).T,
+            units='mV', sampling_rate=10 / ms)
+        self.asiga1 = AnalogSignalArray(np.array([
+            np.sin(np.arange(0, 20 * math.pi, 0.1)),
+            np.cos(np.arange(0, 20 * math.pi, 0.1))]).T,
+            units='mV', sampling_rate=10 / ms)
+        self.asiga2 = AnalogSignalArray(np.array([
+            np.sin(np.arange(0, 20 * math.pi, 0.1)),
+            np.cos(np.arange(0, 20 * math.pi, 0.1)),
+            np.tan(np.arange(0, 20 * math.pi, 0.1))]).T,
+            units='mV', sampling_rate=10 / ms)
+        self.st0 = SpikeTrain(
+            [9 * math.pi, 10 * math.pi, 11 * math.pi, 12 * math.pi],
+            units='ms', t_stop=self.asiga0.t_stop)
+        self.lst = [SpikeTrain(
+            [9 * math.pi, 10 * math.pi, 11 * math.pi, 12 * math.pi],
+            units='ms', t_stop=self.asiga1.t_stop),
+            SpikeTrain([30, 35, 40], units='ms', t_stop=self.asiga1.t_stop)]
+
+    #***********************************************************************
+    #************************ Test for typical values **********************
+
+    def test_spike_field_coherence_perfect_coherence(self):
+        tlen = 100 * pq.s
+        f = 20. * pq.Hz
+        fs = 1 * pq.ms
+        t = np.arange(
+            0, tlen.rescale(pq.s).magnitude, fs.rescale(pq.s).magnitude) * pq.s
+        a = AnalogSignalArray(
+            np.sin(2 * np.pi * (f * t).simplified.magnitude),
+            units=pq.mV, t_start=0 * pq.ms, sampling_period=fs)
+        b = SpikeTrain(
+            np.arange(0, tlen.rescale(pq.ms).magnitude, 50) * pq.ms,
+            t_start=0 * pq.ms, t_stop=tlen)
+        bb = BinnedSpikeTrain(b, binsize=fs)
+        s, f = sta.spike_field_coherence(a, bb, window='boxcar')
+
+        f_ind = np.where(f >= 19.)[0][0]
+        max_ind = np.argmax(s[0])
+        print f_ind
+        print max_ind
+        print s[0][f_ind]
+        import matplotlib.pyplot as plt
+        plt.plot(f, s[0])
+        plt.show()
+        self.assertEqual(f_ind, max_ind)
+        self.assertAlmostEqual(s[0][f_ind], 1., delta=0)
 
 if __name__ == '__main__':
     unittest.main()
