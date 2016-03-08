@@ -234,21 +234,22 @@ def butter(signal, highpass_freq=None, lowpass_freq=None, order=4,
     else:
         return filtered_data
 
-def hilbert(ansig, pad_type = 'zero'):
+
+def hilbert(signal, pad_type='zero'):
     '''
     Apply a Hilbert transform to an AnalogSignal in order to obtains its
     (complex) analytic signal.
 
     Parameters
     -----------
-    ansig : neo.AnalogSignal or neo.AnalogSignalArray
+    signal : neo.AnalogSignal or neo.AnalogSignalArray
         Signal(s) to transform.
     pad_type : string
         Defines what is padded to extend the signal length to next power of two
         for an efficient calculation. If 'zero' is defined zeros are padded to
         the end of the signal. If 'signal' is defined the signal itself is
-        repeated at the end until the right length is reached. Default is
-        'zero'.
+        repeated at the end until the right length is reached.
+        Default: 'zero'.
 
     Returns
     -------
@@ -260,18 +261,18 @@ def hilbert(ansig, pad_type = 'zero'):
     # signal to be of a length that is a power of two. Failure to do so results
     # in computations of certain signal lengths to not finish (or finish in
     # absurd time).
-    n_org = len(ansig.magnitude)
-    n_opt = 2 ** (int(np.log2(n_org-1)) + 1)
+    n_org = len(signal.magnitude)
+    n_opt = 2 ** (int(np.log2(n_org - 1)) + 1)
 
     # Right-pad signal to desired length using the signal itself
     if pad_type == 'signal':
-        s = np.vstack((ansig.magnitude, ansig.magnitude[:n_opt - n_org,:]))
+        s = np.vstack((signal.magnitude, signal.magnitude[:n_opt - n_org, :]))
     elif pad_type == 'zero':
-        s = np.vstack((ansig.magnitude, np.zeros((n_opt - n_org,
-                                                  ansig.shape[1]))))
+        s = np.vstack((signal.magnitude, np.zeros((n_opt - n_org,
+                                                  signal.shape[1]))))
     else:
         raise ValueError("'{}' is an unknown pad_type. Possible: 'zero' or "
                          "'signal'.".format(pad_type))
 
-    return ansig.duplicate_with_new_array(
+    return signal.duplicate_with_new_array(
         scipy.signal.hilbert(s, N=n_opt, axis=0)[:n_org])
