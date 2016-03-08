@@ -450,32 +450,24 @@ class HilbertTestCase(unittest.TestCase):
         """
         pad_type = 'wrong_type'
 
-        self.assertRaises(ValueError, elephant.signal_processing.hilbert,
-                          self.long_signals, pad_type=pad_type)
+        self.assertRaises(
+            ValueError, elephant.signal_processing.hilbert,
+            self.long_signals, pad_type=pad_type)
 
     def test_hilbert_output_shape(self):
         """
-        Tests if the length of the output is identical to the original signal
+        Tests if the length of the output is identical to the original signal,
+        and the dimension is dimensioless
         """
         true_shape = np.shape(self.long_signals)
         output = elephant.signal_processing.hilbert(
-            self.long_signals, pad_type='zero', inplace=False)
+            self.long_signals, pad_type='zero')
         self.assertEquals(np.shape(output), true_shape)
+        self.assertEqual(output.units, pq.dimensionless)
         output = elephant.signal_processing.hilbert(
-            self.long_signals, pad_type='signal', inplace=False)
+            self.long_signals, pad_type='signal')
         self.assertEquals(np.shape(output), true_shape)
-
-    def test_hilbert_inplace(self):
-        copy.deepcopy(self.long_signals)
-
-        h = elephant.signal_processing.hilbert(
-            self.long_signals, pad_type='zero', inplace=False)
-
-        target=
-        assert_array_almost_equal(h.magnitude, target, decimal=9)
-
-        # Assert original signal is overwritten
-        self.assertEqual(signal[0, 0].magnitude, target[0, 0])
+        self.assertEqual(output.units, pq.dimensionless)
 
     def test_hilbert_theoretical_long_signals(self):
         """
@@ -486,7 +478,7 @@ class HilbertTestCase(unittest.TestCase):
         for pad_type in ['zero', 'signal', 'none']:
 
             h = elephant.signal_processing.hilbert(
-                self.long_signals, pad_type=pad_type, inplace=False)
+                self.long_signals, pad_type=pad_type)
 
             phase = np.angle(h.magnitude)
             amplitude = np.abs(h.magnitude)
@@ -532,21 +524,21 @@ class HilbertTestCase(unittest.TestCase):
         for pad_type in ['zero', 'signal', 'none']:
 
             h = elephant.signal_processing.hilbert(
-                self.one_period, pad_type=pad_type, inplace=False)
+                self.one_period, pad_type=pad_type)
 
-            amplitude = np.abs(h)
-            phase = np.angle(h)
-            real_value = np.real(h)
+            amplitude = np.abs(h.magnitude)
+            phase = np.angle(h.magnitude)
+            real_value = np.real(h.magnitude)
 
             # The real part should be equal to the original long_signals:
             assert_array_almost_equal(
                 real_value,
-                self.one_period,
+                self.one_period.magnitude,
                 decimal=decimal)
 
             # The absolute value should be 1 everywhere, for this input:
             assert_array_almost_equal(
-                amplitude.magnitude,
+                amplitude,
                 np.ones(self.one_period.magnitude.shape),
                 decimal=decimal)
 

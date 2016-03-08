@@ -237,7 +237,7 @@ def butter(signal, highpass_freq=None, lowpass_freq=None, order=4,
         return filtered_data
 
 
-def hilbert(signal, pad_type='zero', inplace=True):
+def hilbert(signal, pad_type='zero'):
     '''
     Apply a Hilbert transform to an AnalogSignal in order to obtain its
     (complex) analytic signal.
@@ -253,11 +253,6 @@ def hilbert(signal, pad_type='zero', inplace=True):
         'zero':  signal is  zeros-padded to the end of the signal
         'signal': the signal itself is repeated at the end of the input signal
         Default: 'zero'.
-    inplace : bool
-        If True, the contents of the input AnalogSignal(s) is replaced by the
-        analytic signal. Otherwise, a copy of the original AnalogSignal(s) is
-        returned.
-        Default: True
 
     Returns
     -------
@@ -290,9 +285,6 @@ def hilbert(signal, pad_type='zero', inplace=True):
     else:
         raise ValueError("'{}' is an unknown pad_type.".format(pad_type))
 
-    if inplace:
-        signal = scipy.signal.hilbert(s, N=n, axis=0)[:n_org]
-        return signal
-    else:
-        return signal.duplicate_with_new_array(
-            scipy.signal.hilbert(s, N=n, axis=0)[:n_org])
+    output = signal.duplicate_with_new_array(
+        scipy.signal.hilbert(s, N=n, axis=0)[:n_org])
+    return output / output.units
