@@ -237,7 +237,7 @@ def butter(signal, highpass_freq=None, lowpass_freq=None, order=4,
         return filtered_data
 
 
-def hilbert(signal, pad_type='zero'):
+def hilbert(signal, pad_type='zero', inplace=True):
     '''
     Apply a Hilbert transform to an AnalogSignal in order to obtain its
     (complex) analytic signal.
@@ -253,6 +253,11 @@ def hilbert(signal, pad_type='zero'):
         'zero':  signal is  zeros-padded to the end of the signal
         'signal': the signal itself is repeated at the end of the input signal
         Default: 'zero'.
+    inplace : bool
+        If True, the contents of the input AnalogSignal(s) is replaced by the
+        analytic signal. Otherwise, a copy of the original AnalogSignal(s) is
+        returned.
+        Default: True
 
     Returns
     -------
@@ -263,17 +268,21 @@ def hilbert(signal, pad_type='zero'):
     # To speed up calculation of the Hilbert transform, make sure we change the
     # signal to be of a length that is a power of two. Failure to do so results
     # in computations of certain signal lengths to not finish (or finish in
-    # absurd time).
+    # absurd time). This might be a bug in scipy.
     n_org = signal.shape[0]
     n_opt = 2 ** (int(np.log2(n_org - 1)) + 1)
+#     n_opt = len(signal) - 1 * np.mod(len(signal) + 1, 2)
 
     # Right-pad signal to desired length using the signal itself
     if pad_type == 'signal':
-        s = np.vstack((signal.magnitude, signal.magnitude[:n_opt - n_org, :]))
+        s = np.vstack((
+            signal.magnitude,
+            signal.magnitude[:n_opt - n_org, :]))
         n = n_opt
     elif pad_type == 'zero':
-        s = np.vstack((signal.magnitude, np.zeros((
-            n_opt - n_org, signal.shape[1]))))
+        s = np.vstack((
+            signal.magnitude,
+            np.zeros((n_opt - n_org, signal.shape[1]))))
         n = n_opt
     elif pad_type == 'none':
         s = signal.magnitude
@@ -281,60 +290,9 @@ def hilbert(signal, pad_type='zero'):
     else:
         raise ValueError("'{}' is an unknown pad_type.".format(pad_type))
 
-    assert s.shape[0] == n
-
-    return signal.duplicate_with_new_array(
-        scipy.signal.hilbert(s, N=n, axis=0)[:n_org])
-
-#
-# def analytic_signal(signal, inplace=True):
-#     '''
-#     Calculates the (complex) analytic signal of an AnalogSignal via the Hilbert
-#     transform.
-#
-#     Parameters
-#     -----------
-#     signal : neo.AnalogSignal or list of neo.AnalogSignal
-#         Either a single AnalogSignal of a list of AnalogSignal objects to
-#         transform.
-#         Signal to transform
-#     inplace : bool
-#         If True, the contents of the input AnalogSignal(s) is replaced by the
-#         analytic signal. Otherwise, a copy of the original AnalogSignal(s) is
-#         returned.
-#         Default: True
-#
-#     Returns
-#     -------
-#     neo.AnalogSignal
-#         Contains the analytic signal.
-#     '''
-# #
-# #     # To speed up calculation of the Hilbert transform, make sure we take an
-# #     # uneven number of Fourier components that is smaller than the signal
-# #     # length
-# #     n_opt = len(signal) - 1 * np.mod(len(signal) + 1, 2)
-# #     result = scipy.signal.hilbert(signal.magnitude, N=n_opt)
-# #
-# #     if not inplace:
-# #         return signal.duplicate_with_new_array(result)
-# #     else:
-# #         signal = result
-# #         return signal
-#
-#     # To speed up calculation of the Hilbert transform, make sure we change the
-#     # signal to be of a length that is a power of two. Failure to do so results
-#     # in computations of certain signal lengths to not finish (or finish in
-#     # absurd time).
-#     n_org = len(signal.magnitude)
-#     n_opt = int(math.pow(2, math.ceil(math.log(n_org) / math.log(2))))
-#
-#     # Right-pad signal to desired length using the signal itself
-#     s = np.hstack((signal.magnitude, signal.magnitude[:n_opt - n_org]))
-#
-#     if inplace:
-#         signal = s
-#         return signal
-#     else:
-#         return signal.duplicate_with_new_array(
-#             scipy.signal.hilbert(s, N=n_opt)[:n_org])
+    if inplace:
+        signal = scipy.signal.hilbert(s, N=n, axis=0)[:n_org]
+        return signal
+    else:
+        return signal.duplicate_with_new_array(
+            scipy.signal.hilbert(s, N=n, axis=0)[:n_org])

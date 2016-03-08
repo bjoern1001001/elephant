@@ -18,7 +18,7 @@ import quantities as pq
 
 import elephant.signal_processing
 
-from numpy.ma.testutils import assert_array_equal
+from numpy.ma.testutils import assert_array_equal, assert_allclose
 
 
 class ZscoreTestCase(unittest.TestCase):
@@ -399,23 +399,50 @@ class ButterTestCase(unittest.TestCase):
 
 
 class HilbertTestCase(unittest.TestCase):
-    # generate dummy data of a sinusoid
-    phase = np.arange(0, 2 * np.pi, np.pi / 256)
-    a0 = np.sin(phase)
-    a1 = np.cos(phase)
-    a2 = np.sin(2 * phase)
-    a3 = np.cos(2 * phase)
-    a = np.vstack([a0, a1, a2, a3])
 
-    data_length = len(phase)
-    sampling_period = 1. / data_length
-    times = np.arange(0, data_length * sampling_period, sampling_period)
+    def setUp(self):
+        # Generate test data of a harmonic function over a long time
+        time = np.arange(0, 1000, 0.1) * pq.ms
+        freq = 10 * pq.Hz
 
-    dummy_ansig = neo.AnalogSignalArray(a.T, units=pq.mV,
-                                        sampling_period=sampling_period * pq.s)
-    dummy_ansig_short = neo.AnalogSignalArray(a[:100].T,
-                                              units=pq.mV,
-                                              sampling_period=sampling_period * pq.s)
+        self.amplitude = np.array([
+            np.linspace(1, 10, len(time)),
+            np.linspace(1, 10, len(time)),
+            np.ones((len(time))),
+            np.ones((len(time))) * 10.]).T
+        self.phase = np.array([
+            (time * freq).simplified.magnitude * 2. * np.pi,
+            (time * freq).simplified.magnitude * 2. * np.pi + np.pi / 2,
+            (time * freq).simplified.magnitude * 2. * np.pi + np.pi,
+            (time * freq).simplified.magnitude * 2. * 2. * np.pi]).T
+
+        self.phase = np.mod(self.phase + np.pi, 2. * np.pi) - np.pi
+
+        # rising amplitude cosine, random ampl. sine, flat inverse cosine,
+        # flat cosine at double frequency
+        sigs = np.vstack([
+            self.amplitude[:, 0] * np.cos(self.phase[:, 0]),
+            self.amplitude[:, 1] * np.cos(self.phase[:, 1]),
+            self.amplitude[:, 2] * np.cos(self.phase[:, 2]),
+            self.amplitude[:, 3] * np.cos(self.phase[:, 3])])
+
+        self.long_signals = neo.AnalogSignalArray(
+            sigs.T, units='mV',
+            t_start=0. * pq.ms,
+            sampling_rate=(len(time) / (time[-1] - time[0])).rescale(pq.Hz),
+            dtype=float)
+
+        # Generate test data covering a single oscillation cycle in 1s only
+        phases = np.arange(0, 2 * np.pi, np.pi / 256)
+        sigs = np.vstack([
+            np.sin(phases),
+            np.cos(phases),
+            np.sin(2 * phases),
+            np.cos(2 * phases)])
+
+        self.one_period = neo.AnalogSignalArray(
+            sigs.T, units=pq.mV,
+            sampling_rate=len(phases) * pq.Hz)
 
     def test_hilbert_pad_type_error(self):
         """
@@ -424,114 +451,129 @@ class HilbertTestCase(unittest.TestCase):
         pad_type = 'wrong_type'
 
         self.assertRaises(ValueError, elephant.signal_processing.hilbert,
-                          self.dummy_ansig, pad_type=pad_type)
+                          self.long_signals, pad_type=pad_type)
 
     def test_hilbert_output_shape(self):
         """
         Tests if the length of the output is identical to the original signal
         """
-        true_shape = np.shape(self.dummy_ansig_short)
-        output = elephant.signal_processing.hilbert(self.dummy_ansig_short,
-                                                    pad_type='zero')
+        true_shape = np.shape(self.long_signals)
+        output = elephant.signal_processing.hilbert(
+            self.long_signals, pad_type='zero', inplace=False)
         self.assertEquals(np.shape(output), true_shape)
-        output = elephant.signal_processing.hilbert(self.dummy_ansig_short,
-                                                    pad_type='signal')
+        output = elephant.signal_processing.hilbert(
+            self.long_signals, pad_type='signal', inplace=False)
         self.assertEquals(np.shape(output), true_shape)
 
-    def test_hilbert_theoretical(self):
+    def test_hilbert_inplace(self):
+        copy.deepcopy(self.long_signals)
+
+        h = elephant.signal_processing.hilbert(
+            self.long_signals, pad_type='zero', inplace=False)
+
+        target=
+        assert_array_almost_equal(h.magnitude, target, decimal=9)
+
+        # Assert original signal is overwritten
+        self.assertEqual(signal[0, 0].magnitude, target[0, 0])
+
+    def test_hilbert_theoretical_long_signals(self):
         """
         Tests the output of the hilbert function with regard to amplitude and
-        phase.
-        Copied and adapted from scipy test_signaltools.py
+        phase of long test signals
         """
+        # Performing test using all pad types
+        for pad_type in ['zero', 'signal', 'none']:
+
+            h = elephant.signal_processing.hilbert(
+                self.long_signals, pad_type=pad_type, inplace=False)
+
+            phase = np.angle(h.magnitude)
+            amplitude = np.abs(h.magnitude)
+            real_value = np.real(h.magnitude)
+
+            # The real part should be equal to the original long_signals
+            assert_array_almost_equal(
+                real_value,
+                self.long_signals.magnitude,
+                decimal=14)
+
+            # Test only in the middle half of the array (border effects)
+            ind1 = int(len(h.times) / 4)
+            ind2 = int(3 * len(h.times) / 4)
+
+            # Calculate difference in phase between signal and original phase
+            # and use smaller of any two phase differences
+            phasediff = np.abs(phase[ind1:ind2, :] - self.phase[ind1:ind2, :])
+            phasediff[phasediff >= np.pi] = \
+                2 * np.pi - phasediff[phasediff >= np.pi]
+
+            # Calculate difference in amplitude between signal and original
+            # amplitude
+            amplitudediff = \
+                amplitude[ind1:ind2, :] - self.amplitude[ind1:ind2, :]
+#
+            assert_allclose(phasediff, 0, atol=0.1)
+            assert_allclose(amplitudediff, 0, atol=0.5)
+
+    def test_hilbert_theoretical_one_period(self):
+        """
+        Tests the output of the hilbert function with regard to amplitude and
+        phase of a short signal covering one cycle (more accurate estimate).
+
+        This unit test is adapted from the scipy library of the hilbert()
+        function.
+        """
+
+        # Precision of testing
         decimal = 14
 
         # Performing test using both pad types
-        for pad_type in ['zero', 'signal']:
+        for pad_type in ['zero', 'signal', 'none']:
 
-            h = elephant.signal_processing.hilbert(self.dummy_ansig,
-                                                   pad_type=pad_type)
-            h_abs = np.abs(h)
-            h_angle = np.angle(h)
-            h_real = np.real(h)
+            h = elephant.signal_processing.hilbert(
+                self.one_period, pad_type=pad_type, inplace=False)
 
-            # The real part should be equal to the original signals:
-            assert_array_almost_equal(h_real, self.dummy_ansig, decimal)
-            # The absolute value should be one everywhere, for this input:
-            assert_array_almost_equal(h_abs.magnitude,
-                                      np.ones(
-                                          self.dummy_ansig.magnitude.shape),
-                                      decimal)
+            amplitude = np.abs(h)
+            phase = np.angle(h)
+            real_value = np.real(h)
+
+            # The real part should be equal to the original long_signals:
+            assert_array_almost_equal(
+                real_value,
+                self.one_period,
+                decimal=decimal)
+
+            # The absolute value should be 1 everywhere, for this input:
+            assert_array_almost_equal(
+                amplitude.magnitude,
+                np.ones(self.one_period.magnitude.shape),
+                decimal=decimal)
+
             # For the 'slow' sine - the phase should go from -pi/2 to pi/2 in
             # the first 256 bins:
-            assert_array_almost_equal(h_angle[:256, 0],
-                                np.arange(-np.pi / 2, np.pi / 2, np.pi / 256),
-                                decimal)
+            assert_array_almost_equal(
+                phase[:256, 0],
+                np.arange(-np.pi / 2, np.pi / 2, np.pi / 256),
+                decimal=decimal)
             # For the 'slow' cosine - the phase should go from 0 to pi in the
             # same interval:
             assert_array_almost_equal(
-                h_angle[:256, 1], np.arange(0, np.pi, np.pi / 256), decimal)
+                phase[:256, 1],
+                np.arange(0, np.pi, np.pi / 256),
+                decimal=decimal)
             # The 'fast' sine should make this phase transition in half the
             # time:
-            assert_array_almost_equal(h_angle[:128, 2],
-                                np.arange(-np.pi / 2, np.pi / 2, np.pi / 128),
-                                decimal)
-            # Ditto for the 'fast' cosine:
             assert_array_almost_equal(
-                h_angle[:128, 3], np.arange(0, np.pi, np.pi / 128), decimal)
-
-            # The imaginary part of hilbert(cos(t)) = sin(t) Wikipedia
-            assert_array_almost_equal(h[:, 1].imag.magnitude, self.a0, decimal)
-
-
-# class HilbertTestCase(unittest.TestCase):
-#
-#     def setUp(self):
-#         time = np.arange(0, 1000) * pq.ms
-#         self.amplitude = np.linspace(1, 10, len(time))
-#         freq = 10 * pq.Hz
-#         self.phase = (time * freq).simplified.magnitude * 2. * np.pi
-#         self.signal_sine = neo.AnalogSignalArray(
-#             self.amplitude *
-#             np.cos(self.phase),
-#             units='mV',
-#             t_start=0. * pq.ms,
-#             sampling_rate=(len(time) / (time[-1] - time[0])).rescale(pq.Hz),
-#             dtype=float)
-#
-#     def test_hilbert_single_dup(self):
-#         '''
-#         Test z-score on a single AnalogSignalArray, asking to return a
-#         duplicate.
-#         '''
-#
-#         h = elephant.signal_processing.analytic_signal(
-#             self.signal_sine, inplace=False)
-#
-#         phase = np.angle(h.magnitude)
-#         amplitude = np.abs(h.magnitude)
-#
-# #         import matplotlib.pyplot as plt
-# #         plt.plot(h.times, phase, 'm')
-# #         plt.plot(
-# #             h.times, np.mod(self.phase + np.pi, 2. * np.pi) - +np.pi, 'r--')
-# #         plt.plot(h.times, amplitude, 'k')
-# #         plt.plot(h.times, self.amplitude, 'g--')
-# #         plt.show()
-#
-#         # Test only in the middle of the array to account for border effects
-#         p1 = int(len(h.times) / 4)
-#         p2 = int(3 * len(h.times) / 4)
-#         phasediff = np.abs(
-#             phase[p1:p2] -
-#             (np.mod(self.phase + np.pi, 2. * np.pi) - np.pi)[p1:p2])
-#         phasediff[phasediff >= np.pi] = \
-#             2 * np.pi - phasediff[phasediff >= np.pi]
-#         amplitudediff = amplitude[p1:p2] - self.amplitude[p1:p2]
-#         print(np.max(phasediff))
-#         print(np.max(amplitudediff))
-#         assert_allclose(phasediff, 0, atol=0.05)
-#         assert_allclose(amplitudediff, 0, atol=0.05)
+                phase[:128, 2],
+                np.arange(-np.pi / 2, np.pi / 2, np.pi / 128),
+                decimal=decimal)
+            # The 'fast' cosine should make this phase transition in half the
+            # time:
+            assert_array_almost_equal(
+                phase[:128, 3],
+                np.arange(0, np.pi, np.pi / 128),
+                decimal=decimal)
 
 
 if __name__ == '__main__':
