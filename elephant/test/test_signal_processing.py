@@ -22,6 +22,7 @@ from numpy.ma.testutils import assert_array_equal
 
 
 class ZscoreTestCase(unittest.TestCase):
+
     def setUp(self):
         self.test_seq1 = [1, 28, 4, 47, 5, 16, 2, 5, 21, 12,
                           4, 12, 59, 2, 4, 18, 33, 25, 2, 34,
@@ -51,7 +52,7 @@ class ZscoreTestCase(unittest.TestCase):
         '''
         signal = neo.AnalogSignalArray(
             self.test_seq1, units='mV',
-            t_start=0.*pq.ms, sampling_rate=1000.*pq.Hz, dtype=float)
+            t_start=0. * pq.ms, sampling_rate=1000. * pq.Hz, dtype=float)
 
         m = np.mean(self.test_seq1)
         s = np.std(self.test_seq1)
@@ -74,7 +75,7 @@ class ZscoreTestCase(unittest.TestCase):
         '''
         signal = neo.AnalogSignalArray(
             self.test_seq1, units='mV',
-            t_start=0.*pq.ms, sampling_rate=1000.*pq.Hz, dtype=float)
+            t_start=0. * pq.ms, sampling_rate=1000. * pq.Hz, dtype=float)
 
         m = np.mean(self.test_seq1)
         s = np.std(self.test_seq1)
@@ -98,7 +99,7 @@ class ZscoreTestCase(unittest.TestCase):
         signal = neo.AnalogSignalArray(
             np.transpose(
                 np.vstack([self.test_seq1, self.test_seq2])), units='mV',
-            t_start=0.*pq.ms, sampling_rate=1000.*pq.Hz, dtype=float)
+            t_start=0. * pq.ms, sampling_rate=1000. * pq.Hz, dtype=float)
 
         m = np.mean(signal.magnitude, axis=0, keepdims=True)
         s = np.std(signal.magnitude, axis=0, keepdims=True)
@@ -118,7 +119,7 @@ class ZscoreTestCase(unittest.TestCase):
         '''
         signal = neo.AnalogSignalArray(
             np.vstack([self.test_seq1, self.test_seq2]), units='mV',
-            t_start=0.*pq.ms, sampling_rate=1000.*pq.Hz, dtype=float)
+            t_start=0. * pq.ms, sampling_rate=1000. * pq.Hz, dtype=float)
 
         m = np.mean(signal.magnitude, axis=0, keepdims=True)
         s = np.std(signal.magnitude, axis=0, keepdims=True)
@@ -139,7 +140,7 @@ class ZscoreTestCase(unittest.TestCase):
         '''
         signal = neo.AnalogSignalArray(
             self.test_seq1, units='mV',
-            t_start=0.*pq.ms, sampling_rate=1000.*pq.Hz, dtype=int)
+            t_start=0. * pq.ms, sampling_rate=1000. * pq.Hz, dtype=int)
 
         m = np.mean(self.test_seq1)
         s = np.std(self.test_seq1)
@@ -159,7 +160,7 @@ class ZscoreTestCase(unittest.TestCase):
         '''
         signal = neo.AnalogSignalArray(
             self.test_seq1, units='mV',
-            t_start=0.*pq.ms, sampling_rate=1000.*pq.Hz, dtype=int)
+            t_start=0. * pq.ms, sampling_rate=1000. * pq.Hz, dtype=int)
 
         m = np.mean(self.test_seq1)
         s = np.std(self.test_seq1)
@@ -180,11 +181,11 @@ class ZscoreTestCase(unittest.TestCase):
         signal1 = neo.AnalogSignalArray(
             np.transpose(np.vstack([self.test_seq1, self.test_seq1])),
             units='mV',
-            t_start=0.*pq.ms, sampling_rate=1000.*pq.Hz, dtype=float)
+            t_start=0. * pq.ms, sampling_rate=1000. * pq.Hz, dtype=float)
         signal2 = neo.AnalogSignalArray(
             np.transpose(np.vstack([self.test_seq1, self.test_seq2])),
             units='mV',
-            t_start=0.*pq.ms, sampling_rate=1000.*pq.Hz, dtype=float)
+            t_start=0. * pq.ms, sampling_rate=1000. * pq.Hz, dtype=float)
         signal_list = [signal1, signal2]
 
         m = np.mean(np.hstack([self.test_seq1, self.test_seq1]))
@@ -218,11 +219,11 @@ class ZscoreTestCase(unittest.TestCase):
         signal1 = neo.AnalogSignalArray(
             np.transpose(np.vstack([self.test_seq1, self.test_seq1])),
             units='mV',
-            t_start=0.*pq.ms, sampling_rate=1000.*pq.Hz, dtype=float)
+            t_start=0. * pq.ms, sampling_rate=1000. * pq.Hz, dtype=float)
         signal2 = neo.AnalogSignalArray(
             np.transpose(np.vstack([self.test_seq1, self.test_seq2])),
             units='mV',
-            t_start=0.*pq.ms, sampling_rate=1000.*pq.Hz, dtype=float)
+            t_start=0. * pq.ms, sampling_rate=1000. * pq.Hz, dtype=float)
         signal_list = [signal1, signal2]
 
         m = np.mean(np.hstack([self.test_seq1, self.test_seq1]))
@@ -250,6 +251,7 @@ class ZscoreTestCase(unittest.TestCase):
 
 
 class ButterTestCase(unittest.TestCase):
+
     def test_butter_filter_type(self):
         """
         Test if correct type of filtering is performed according to how cut-off
@@ -407,14 +409,13 @@ class HilbertTestCase(unittest.TestCase):
 
     data_length = len(phase)
     sampling_period = 1. / data_length
-    times = np.arange(0, data_length*sampling_period, sampling_period)
+    times = np.arange(0, data_length * sampling_period, sampling_period)
 
     dummy_ansig = neo.AnalogSignalArray(a.T, units=pq.mV,
                                         sampling_period=sampling_period * pq.s)
     dummy_ansig_short = neo.AnalogSignalArray(a[:100].T,
                                               units=pq.mV,
-                                              sampling_period=
-                                                  sampling_period * pq.s)
+                                              sampling_period=sampling_period * pq.s)
 
     def test_hilbert_pad_type_error(self):
         """
@@ -437,8 +438,6 @@ class HilbertTestCase(unittest.TestCase):
                                                     pad_type='signal')
         self.assertEquals(np.shape(output), true_shape)
 
-
-
     def test_hilbert_theoretical(self):
         """
         Tests the output of the hilbert function with regard to amplitude and
@@ -448,7 +447,7 @@ class HilbertTestCase(unittest.TestCase):
         decimal = 14
 
         # Performing test using both pad types
-        for pad_type in ['zero','signal']:
+        for pad_type in ['zero', 'signal']:
 
             h = elephant.signal_processing.hilbert(self.dummy_ansig,
                                                    pad_type=pad_type)
@@ -460,27 +459,79 @@ class HilbertTestCase(unittest.TestCase):
             assert_array_almost_equal(h_real, self.dummy_ansig, decimal)
             # The absolute value should be one everywhere, for this input:
             assert_array_almost_equal(h_abs.magnitude,
-                                      np.ones(self.dummy_ansig.magnitude.shape),
+                                      np.ones(
+                                          self.dummy_ansig.magnitude.shape),
                                       decimal)
             # For the 'slow' sine - the phase should go from -pi/2 to pi/2 in
             # the first 256 bins:
-            assert_array_almost_equal(h_angle[:256,0],
+            assert_array_almost_equal(h_angle[:256, 0],
                                 np.arange(-np.pi / 2, np.pi / 2, np.pi / 256),
                                 decimal)
             # For the 'slow' cosine - the phase should go from 0 to pi in the
             # same interval:
             assert_array_almost_equal(
-                h_angle[:256,1], np.arange(0, np.pi, np.pi / 256), decimal)
-            # The 'fast' sine should make this phase transition in half the time:
-            assert_array_almost_equal(h_angle[:128,2],
+                h_angle[:256, 1], np.arange(0, np.pi, np.pi / 256), decimal)
+            # The 'fast' sine should make this phase transition in half the
+            # time:
+            assert_array_almost_equal(h_angle[:128, 2],
                                 np.arange(-np.pi / 2, np.pi / 2, np.pi / 128),
                                 decimal)
             # Ditto for the 'fast' cosine:
             assert_array_almost_equal(
-                h_angle[:128,3], np.arange(0, np.pi, np.pi / 128), decimal)
+                h_angle[:128, 3], np.arange(0, np.pi, np.pi / 128), decimal)
 
             # The imaginary part of hilbert(cos(t)) = sin(t) Wikipedia
-            assert_array_almost_equal(h[:,1].imag.magnitude, self.a0, decimal)
+            assert_array_almost_equal(h[:, 1].imag.magnitude, self.a0, decimal)
+
+
+# class HilbertTestCase(unittest.TestCase):
+#
+#     def setUp(self):
+#         time = np.arange(0, 1000) * pq.ms
+#         self.amplitude = np.linspace(1, 10, len(time))
+#         freq = 10 * pq.Hz
+#         self.phase = (time * freq).simplified.magnitude * 2. * np.pi
+#         self.signal_sine = neo.AnalogSignalArray(
+#             self.amplitude *
+#             np.cos(self.phase),
+#             units='mV',
+#             t_start=0. * pq.ms,
+#             sampling_rate=(len(time) / (time[-1] - time[0])).rescale(pq.Hz),
+#             dtype=float)
+#
+#     def test_hilbert_single_dup(self):
+#         '''
+#         Test z-score on a single AnalogSignalArray, asking to return a
+#         duplicate.
+#         '''
+#
+#         h = elephant.signal_processing.analytic_signal(
+#             self.signal_sine, inplace=False)
+#
+#         phase = np.angle(h.magnitude)
+#         amplitude = np.abs(h.magnitude)
+#
+# #         import matplotlib.pyplot as plt
+# #         plt.plot(h.times, phase, 'm')
+# #         plt.plot(
+# #             h.times, np.mod(self.phase + np.pi, 2. * np.pi) - +np.pi, 'r--')
+# #         plt.plot(h.times, amplitude, 'k')
+# #         plt.plot(h.times, self.amplitude, 'g--')
+# #         plt.show()
+#
+#         # Test only in the middle of the array to account for border effects
+#         p1 = int(len(h.times) / 4)
+#         p2 = int(3 * len(h.times) / 4)
+#         phasediff = np.abs(
+#             phase[p1:p2] -
+#             (np.mod(self.phase + np.pi, 2. * np.pi) - np.pi)[p1:p2])
+#         phasediff[phasediff >= np.pi] = \
+#             2 * np.pi - phasediff[phasediff >= np.pi]
+#         amplitudediff = amplitude[p1:p2] - self.amplitude[p1:p2]
+#         print(np.max(phasediff))
+#         print(np.max(amplitudediff))
+#         assert_allclose(phasediff, 0, atol=0.05)
+#         assert_allclose(amplitudediff, 0, atol=0.05)
 
 
 if __name__ == '__main__':
