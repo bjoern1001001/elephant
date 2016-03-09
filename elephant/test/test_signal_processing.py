@@ -452,7 +452,7 @@ class HilbertTestCase(unittest.TestCase):
 
         self.assertRaises(
             ValueError, elephant.signal_processing.hilbert,
-            self.long_signals, padding=padding)
+            self.long_signals, N=padding)
 
     def test_hilbert_output_shape(self):
         """
@@ -461,11 +461,11 @@ class HilbertTestCase(unittest.TestCase):
         """
         true_shape = np.shape(self.long_signals)
         output = elephant.signal_processing.hilbert(
-            self.long_signals, padding='nextpow')
+            self.long_signals, N='nextpow')
         self.assertEquals(np.shape(output), true_shape)
         self.assertEqual(output.units, pq.dimensionless)
         output = elephant.signal_processing.hilbert(
-            self.long_signals, padding=16384)
+            self.long_signals, N=16384)
         self.assertEquals(np.shape(output), true_shape)
         self.assertEqual(output.units, pq.dimensionless)
 
@@ -478,7 +478,7 @@ class HilbertTestCase(unittest.TestCase):
         for padding in ['nextpow', 'none', 16384]:
 
             h = elephant.signal_processing.hilbert(
-                self.long_signals, padding=padding)
+                self.long_signals, N=padding)
 
             phase = np.angle(h.magnitude)
             amplitude = np.abs(h.magnitude)
@@ -524,7 +524,7 @@ class HilbertTestCase(unittest.TestCase):
         for padding in ['nextpow', 'none', 512]:
 
             h = elephant.signal_processing.hilbert(
-                self.one_period, padding=padding)
+                self.one_period, N=padding)
 
             amplitude = np.abs(h.magnitude)
             phase = np.angle(h.magnitude)

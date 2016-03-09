@@ -237,7 +237,7 @@ def butter(signal, highpass_freq=None, lowpass_freq=None, order=4,
         return filtered_data
 
 
-def hilbert(signal, padding='nextpow'):
+def hilbert(signal, N='nextpow'):
     '''
     Apply a Hilbert transform to an AnalogSignal object in order to obtain its
     (complex) analytic signal.
@@ -256,10 +256,10 @@ def hilbert(signal, padding='nextpow'):
     -----------
     signal : neo.AnalogSignal
         Signal(s) to transform
-    padding : string
+    N : string or int
         Defines what is padded to extend the signal length to next power of two
         for a more efficient calculation.
-            'none': no padding
+            'none': no N
             'nextpow':  zero-pad to the next length that is a power of 2
             integer: directly specify the length to zero-pad to (indicates the
                 number of Fourier components.
@@ -277,16 +277,16 @@ def hilbert(signal, padding='nextpow'):
     ...       np.array([1, 2, 3, 4, 5, 6]).reshape(-1,1)*mV,
     ...       t_start=0*s, sampling_rate=1000*Hz)
 
-    >>> analytic_signal=hilbert(a, padding='nextpow')
+    >>> analytic_signal=hilbert(a, N='nextpow')
     >>> angles=np.angle(analytic_signal)
     >>> amplitudes=np.angle(analytic_signal)
     '''
     n_org = signal.shape[0]
 
     # Right-pad signal to desired length using the signal itself
-    if type(padding) == int:
-        n = padding
-    elif padding == 'nextpow':
+    if type(N) == int:
+        n = N
+    elif N == 'nextpow':
         # To speed up calculation of the Hilbert transform, make sure we change
         # the signal to be of a length that is a power of two. Failure to do so
         # results in computations of certain signal lengths to not finish (or
@@ -303,10 +303,10 @@ def hilbert(signal, padding='nextpow'):
         # For this reason, nextpow is the default setting for now.
 
         n = 2 ** (int(np.log2(n_org - 1)) + 1)
-    elif padding == 'none':
+    elif N == 'none':
         n = n_org
     else:
-        raise ValueError("'{}' is an unknown padding.".format(padding))
+        raise ValueError("'{}' is an unknown N.".format(N))
 
     output = signal.duplicate_with_new_array(
         scipy.signal.hilbert(signal.magnitude, N=n, axis=0)[:n_org])
