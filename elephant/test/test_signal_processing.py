@@ -448,11 +448,11 @@ class HilbertTestCase(unittest.TestCase):
         """
         Tests if incorrect pad_type raises ValueError.
         """
-        pad_type = 'wrong_type'
+        padding = 'wrong_type'
 
         self.assertRaises(
             ValueError, elephant.signal_processing.hilbert,
-            self.long_signals, pad_type=pad_type)
+            self.long_signals, padding=padding)
 
     def test_hilbert_output_shape(self):
         """
@@ -461,11 +461,11 @@ class HilbertTestCase(unittest.TestCase):
         """
         true_shape = np.shape(self.long_signals)
         output = elephant.signal_processing.hilbert(
-            self.long_signals, pad_type='zero')
+            self.long_signals, padding='nextpow')
         self.assertEquals(np.shape(output), true_shape)
         self.assertEqual(output.units, pq.dimensionless)
         output = elephant.signal_processing.hilbert(
-            self.long_signals, pad_type='signal')
+            self.long_signals, padding=16384)
         self.assertEquals(np.shape(output), true_shape)
         self.assertEqual(output.units, pq.dimensionless)
 
@@ -475,10 +475,10 @@ class HilbertTestCase(unittest.TestCase):
         phase of long test signals
         """
         # Performing test using all pad types
-        for pad_type in ['zero', 'signal', 'none']:
+        for padding in ['nextpow', 'none', 16384]:
 
             h = elephant.signal_processing.hilbert(
-                self.long_signals, pad_type=pad_type)
+                self.long_signals, padding=padding)
 
             phase = np.angle(h.magnitude)
             amplitude = np.abs(h.magnitude)
@@ -521,10 +521,10 @@ class HilbertTestCase(unittest.TestCase):
         decimal = 14
 
         # Performing test using both pad types
-        for pad_type in ['zero', 'signal', 'none']:
+        for padding in ['nextpow', 'none', 512]:
 
             h = elephant.signal_processing.hilbert(
-                self.one_period, pad_type=pad_type)
+                self.one_period, padding=padding)
 
             amplitude = np.abs(h.magnitude)
             phase = np.angle(h.magnitude)

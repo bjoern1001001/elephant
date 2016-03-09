@@ -237,54 +237,63 @@ def butter(signal, highpass_freq=None, lowpass_freq=None, order=4,
         return filtered_data
 
 
-def hilbert(signal, pad_type='zero'):
+def hilbert(signal, padding='zero'):
     '''
-    Apply a Hilbert transform to an AnalogSignal in order to obtain its
+    Apply a Hilbert transform to an AnalogSignal object in order to obtain its
     (complex) analytic signal.
+
+    The time series of the instantaneous angle and amplitude can be obtained as
+    the angle and absolute value of the complex analytic signal, respectively.
+
+    By default, the function will zero-pad the signal to a length corresponding
+    to the next higher power of 2. This will provide higher computational
+    efficiency at the expense of memory.
 
     Parameters
     -----------
-    signal : neo.AnalogSignalArray
-        Signal(s) to transform.
-    pad_type : string
+    signal : neo.AnalogSignal
+        Signal(s) to transform
+    padding : string
         Defines what is padded to extend the signal length to next power of two
         for a more efficient calculation.
-        'none': no padding
-        'zero':  signal is  zeros-padded to the end of the signal
-        'signal': the signal itself is repeated at the end of the input signal
-        Default: 'zero'.
+            'none': no padding
+            'nextpow':  zero-pad to the next length that is a power of 2
+            integer: directly specify the length to zero-pad to (indicates the
+                number of Fourier components.
+        Default: 'nextpow'.
 
     Returns
     -------
     neo.AnalogSignal
-        Contains the analytic signal.
-    '''
+        Contains the complex analytic signal(s) corresponding to the input
+        signals. The unit of the analytic signal is dimensionless.
 
-    # To speed up calculation of the Hilbert transform, make sure we change the
-    # signal to be of a length that is a power of two. Failure to do so results
-    # in computations of certain signal lengths to not finish (or finish in
-    # absurd time). This might be a bug in scipy.
+    Example
+    -------
+    >>> a = neo.AnalogSignalArray(
+    ...       np.array([1, 2, 3, 4, 5, 6]).reshape(-1,1)*mV,
+    ...       t_start=0*s, sampling_rate=1000*Hz)
+
+    >>> analytic_signal=hilbert(a, padding='nextpow')
+    >>> angles=np.angle(analytic_signal)
+    >>> amplitudes=np.angle(analytic_signal)
+    '''
     n_org = signal.shape[0]
-    n_opt = 2 ** (int(np.log2(n_org - 1)) + 1)
-#     n_opt = len(signal) - 1 * np.mod(len(signal) + 1, 2)
 
     # Right-pad signal to desired length using the signal itself
-    if pad_type == 'signal':
-        s = np.vstack((
-            signal.magnitude,
-            signal.magnitude[:n_opt - n_org, :]))
-        n = n_opt
-    elif pad_type == 'zero':
-        s = np.vstack((
-            signal.magnitude,
-            np.zeros((n_opt - n_org, signal.shape[1]))))
-        n = n_opt
-    elif pad_type == 'none':
-        s = signal.magnitude
+    if type(padding) == int:
+        n = padding
+    elif padding == 'nextpow':
+        # To speed up calculation of the Hilbert transform, make sure we change
+        # the signal to be of a length that is a power of two. Failure to do so
+        # results in computations of certain signal lengths to not finish (or
+        # finish in absurd time). This might be a bug in scipy.
+        n = 2 ** (int(np.log2(n_org - 1)) + 1)
+    elif padding == 'none':
         n = n_org
     else:
-        raise ValueError("'{}' is an unknown pad_type.".format(pad_type))
+        raise ValueError("'{}' is an unknown padding.".format(padding))
 
     output = signal.duplicate_with_new_array(
-        scipy.signal.hilbert(s, N=n, axis=0)[:n_org])
+        scipy.signal.hilbert(signal.magnitude, N=n, axis=0)[:n_org])
     return output / output.units
