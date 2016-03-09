@@ -237,17 +237,20 @@ def butter(signal, highpass_freq=None, lowpass_freq=None, order=4,
         return filtered_data
 
 
-def hilbert(signal, padding='zero'):
+def hilbert(signal, padding='nextpow'):
     '''
     Apply a Hilbert transform to an AnalogSignal object in order to obtain its
     (complex) analytic signal.
 
     The time series of the instantaneous angle and amplitude can be obtained as
-    the angle and absolute value of the complex analytic signal, respectively.
+    the angle (np.angle) and absolute value (np.abs) of the complex analytic
+    signal, respectively.
 
     By default, the function will zero-pad the signal to a length corresponding
     to the next higher power of 2. This will provide higher computational
-    efficiency at the expense of memory.
+    efficiency at the expense of memory. In addition, this circumvents a
+    situation where for some large choices of the length of the input,
+    scipy.signal.hilbert will not terminate.
 
     Parameters
     -----------
@@ -287,7 +290,18 @@ def hilbert(signal, padding='zero'):
         # To speed up calculation of the Hilbert transform, make sure we change
         # the signal to be of a length that is a power of two. Failure to do so
         # results in computations of certain signal lengths to not finish (or
-        # finish in absurd time). This might be a bug in scipy.
+        # finish in absurd time). This might be a bug in scipy (0.16), e.g.,
+        # the following code will not terminate for this value of k:
+        #
+        # import numpy
+        # import scipy.signal
+        # k=679346
+        # t = np.arange(0, k) / 1000.
+        # a = (1 + t / t[-1]) * np.sin(2 * np.pi * 5 * t)
+        # analyticsig = scipy.signal.hilbert(a)
+        #
+        # For this reason, nextpow is the default setting for now.
+
         n = 2 ** (int(np.log2(n_org - 1)) + 1)
     elif padding == 'none':
         n = n_org
