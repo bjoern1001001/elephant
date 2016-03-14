@@ -206,54 +206,105 @@ class sta_TestCase(unittest.TestCase):
 class sfc_TestCase(unittest.TestCase):
 
     def setUp(self):
-        self.asiga0 = AnalogSignalArray(np.array([
-            np.sin(np.arange(0, 20 * math.pi, 0.1))]).T,
-            units='mV', sampling_rate=10 / ms)
-        self.asiga1 = AnalogSignalArray(np.array([
-            np.sin(np.arange(0, 20 * math.pi, 0.1)),
-            np.cos(np.arange(0, 20 * math.pi, 0.1))]).T,
-            units='mV', sampling_rate=10 / ms)
-        self.asiga2 = AnalogSignalArray(np.array([
-            np.sin(np.arange(0, 20 * math.pi, 0.1)),
-            np.cos(np.arange(0, 20 * math.pi, 0.1)),
-            np.tan(np.arange(0, 20 * math.pi, 0.1))]).T,
-            units='mV', sampling_rate=10 / ms)
-        self.st0 = SpikeTrain(
-            [9 * math.pi, 10 * math.pi, 11 * math.pi, 12 * math.pi],
-            units='ms', t_stop=self.asiga0.t_stop)
-        self.lst = [SpikeTrain(
-            [9 * math.pi, 10 * math.pi, 11 * math.pi, 12 * math.pi],
-            units='ms', t_stop=self.asiga1.t_stop),
-            SpikeTrain([30, 35, 40], units='ms', t_stop=self.asiga1.t_stop)]
+        # standard testsignals
+        tlen0 = 100 * pq.s
+        f0 = 20. * pq.Hz
+        fs0 = 1 * pq.ms
+        t0 = np.arange(0, tlen0.rescale(pq.s).magnitude, fs0.rescale(pq.s).magnitude) * pq.s
+        self.anasig0 = AnalogSignalArray(
+            np.sin(2 * np.pi * (f0 * t0).simplified.magnitude),
+            units=pq.mV, t_start=0 * pq.ms, sampling_period=fs0)
+        self.st0 = SpikeTrain(np.arange(0, tlen0.rescale(pq.ms).magnitude, 50) * pq.ms,
+            t_start=0 * pq.ms, t_stop=tlen0)
+        self.bst0 = BinnedSpikeTrain(self.st0, binsize=fs0)
+
+        # shortened analogsignals
+        self.anasig1 = self.anasig0.time_slice(1*pq.s,None)
+        self.anasig2 = self.anasig0.time_slice(None,99*pq.s)
+
+        # increased sampling frequency
+        fs1 = 0.1 * pq.ms
+        self.anasig3 = AnalogSignalArray(
+            np.sin(2 * np.pi * (f0 * t0).simplified.magnitude),
+            units=pq.mV, t_start=0 * pq.ms, sampling_period=fs1)
+        self.bst1 = BinnedSpikeTrain(self.st0.time_slice(self.anasig3.t_start,self.anasig3.t_stop), binsize=fs1)
+
+        # analogsignal containing multiple traces
+        self.anasig4 = AnalogSignalArray(
+            np.array([np.sin(2 * np.pi * (f0 * t0).simplified.magnitude),
+            np.sin(4 * np.pi * (f0 * t0).simplified.magnitude)]).transpose(),
+            units=pq.mV, t_start=0 * pq.ms, sampling_period=fs0)
+
 
     #***********************************************************************
     #************************ Test for typical values **********************
 
+    def test_start_stop_times_out_of_range(self):
+        self.assertRaises(ValueError,
+                          sta.spike_field_coherence,
+                          self.anasig1, self.bst0)
+
+        self.assertRaises(ValueError,
+                          sta.spike_field_coherence,
+                          self.anasig2, self.bst0)
+
+    def test_non_matching_input_binning(self):
+        self.assertRaises(ValueError,
+                          sta.spike_field_coherence,
+                          self.anasig0, self.bst1)
+
     def test_spike_field_coherence_perfect_coherence(self):
-        tlen = 100 * pq.s
-        f = 20. * pq.Hz
-        fs = 1 * pq.ms
-        t = np.arange(
-            0, tlen.rescale(pq.s).magnitude, fs.rescale(pq.s).magnitude) * pq.s
-        a = AnalogSignalArray(
-            np.sin(2 * np.pi * (f * t).simplified.magnitude),
-            units=pq.mV, t_start=0 * pq.ms, sampling_period=fs)
-        b = SpikeTrain(
-            np.arange(0, tlen.rescale(pq.ms).magnitude, 50) * pq.ms,
-            t_start=0 * pq.ms, t_stop=tlen)
-        bb = BinnedSpikeTrain(b, binsize=fs)
-        s, f = sta.spike_field_coherence(a, bb, window='boxcar')
+        s, f = sta.spike_field_coherence(self.anasig0, self.bst0, window='boxcar')
 
         f_ind = np.where(f >= 19.)[0][0]
-        max_ind = np.argmax(s[0])
-        print f_ind
-        print max_ind
-        print s[0][f_ind]
-        import matplotlib.pyplot as plt
-        plt.plot(f, s[0])
-        plt.show()
+        max_ind = np.argmax(s[1:]) + 1
+
         self.assertEqual(f_ind, max_ind)
-        self.assertAlmostEqual(s[0][f_ind], 1., delta=0)
+        self.assertAlmostEqual(s[f_ind], 1., delta=0.01)
+
+    def test_non_binned_spiketrain_input(self):
+        s, f = sta.spike_field_coherence(self.anasig0, self.st0)
+
+        f_ind = np.where(f >= 19.)[0][0]
+        max_ind = np.argmax(s[1:]) + 1
+
+        self.assertEqual(f_ind, max_ind)
+        self.assertAlmostEqual(s[f_ind], 1., delta=0.01)
+
+    def test_output_frequencies(self):
+        nfft = 256
+        s, f = sta.spike_field_coherence(self.anasig3, self.bst1,nfft=nfft)
+
+        # checking number of frequency samples
+        self.assertEqual(len(f),nfft/2+1)
+
+        # checking values of frequency samples
+        assert_array_almost_equal(f,np.linspace(0,
+                                   self.anasig3.sampling_rate.rescale('Hz').magnitude/2,
+                                   nfft/2+1) * pq.Hz)
+
+    def test_signal_dimensions(self):
+        # single analogsignal trace and single spike train
+        s_single, f_single = sta.spike_field_coherence(self.anasig0, self.bst0)
+
+        self.assertEqual(len(f_single.shape),1)
+        self.assertEqual(len(s_single.shape),1)
+
+        # multiple analogsignal traces and single spike train
+        s_multi, f_multi = sta.spike_field_coherence(self.anasig4, self.bst0)
+
+        self.assertEqual(len(f_multi.shape),1)
+        self.assertEqual(len(s_multi.shape),2)
+
+        # frequencies are identical since same sampling frequency was used
+        # in both cases and data length is the same
+        assert_array_equal(f_single,f_multi)
+        # coherences of s_single and first signal in s_multi are identical,
+        # since first analogsignal trace in anasig4 is same as in anasig0
+        assert_array_equal(s_single,s_multi[:,0])
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
