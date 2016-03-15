@@ -466,7 +466,7 @@ def intersection_matrix(
         # If normalization required, for each j such that bsts_y[j] is
         # identically 0 the code above sets imat[:, j] to identically nan.
         # Substitute 0s instead. Then refill the main diagonal with 1s.
-        if (norm is not False) and (norm >= 0.5):
+        if norm and norm >= 0.5:
             ybins_equal_0 = np.where(spikes_per_bin_y == 0)[0]
             for y_id in ybins_equal_0:
                 imat[:, y_id] = 0
@@ -828,10 +828,10 @@ def probability_matrix_montecarlo(
     # equal to that of the original data
     pmat = np.array(np.zeros(imat.shape), dtype=int)
     if verbose:
-        print 'pmat_bootstrap(): begin of bootstrap...'
+        print('pmat_bootstrap(): begin of bootstrap...')
     for i in _xrange(n_surr):                      # For each surrogate id i
         if verbose:
-            print '    surr %d' % i
+            print('    surr %d' % i)
         surrs_i = [st[i] for st in surrs]         # Take each i-th surrogate
         imat_surr, xx, yy = intersection_matrix(  # compute the related imat
             surrs_i, binsize=binsize, dt=dt,
@@ -839,7 +839,7 @@ def probability_matrix_montecarlo(
         pmat += (imat_surr <= imat - 1)
     pmat = pmat * 1. / n_surr
     if verbose:
-        print 'pmat_bootstrap(): done'
+        print('pmat_bootstrap(): done')
 
     return pmat, x_edges, y_edges
 
@@ -1092,8 +1092,6 @@ def _jsf_uniform_orderstat_3d(u, alpha, n):
         iter_id += 1
         di = -np.diff(np.hstack([n, list(i), 0]))
         if np.all(di >= 0):
-            if iter_id % 10**6 == 0:
-                print '%.0e' % (iter_id // 10**6)
             dI = di.reshape((-1, 1, 1)) * np.ones((A, B))  # shape (d+1, A, B)
 
             # for each a=0,1,...,A-1 and b=0,1,...,B-1, replace dU_abk with 1
@@ -1396,7 +1394,7 @@ def sse_intersection(sse1, sse2, intersection='linkwise'):
 
     '''
     sse_new = sse1.copy()
-    for pixel1 in sse_new.keys():
+    for pixel1 in sse1.keys():
         if pixel1 not in sse2.keys():
             del sse_new[pixel1]
 
@@ -1454,7 +1452,7 @@ def sse_difference(sse1, sse2, difference='linkwise'):
         difference between sse1 and sse2 (see above).
     '''
     sse_new = sse1.copy()
-    for pixel1 in sse_new.keys():
+    for pixel1 in sse1.keys():
         if pixel1 in sse2.keys():
             if difference == 'pixelwise':
                 del sse_new[pixel1]

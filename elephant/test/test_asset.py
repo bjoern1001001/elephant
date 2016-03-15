@@ -10,13 +10,19 @@ import numpy as np
 import scipy.spatial
 import quantities as pq
 import neo
-import elephant.asset as asset
+
+try:
+    import sklearn
+except ImportError:
+    HAVE_SKLEARN = False
+else:
+    import elephant.asset as asset
+    HAVE_SKLEARN = True
+    stretchedmetric2d = asset._stretched_metric_2d
+    cluster = asset.cluster_matrix_entries
 
 
-stretchedmetric2d = asset._stretched_metric_2d
-cluster = asset.cluster_matrix_entries
-
-
+@unittest.skipUnless(HAVE_SKLEARN, 'requires sklearn')
 class AssetTestCase(unittest.TestCase):
 
     def test_stretched_metric_2d_size(self):
@@ -219,5 +225,3 @@ def run():
 
 if __name__ == "__main__":
     unittest.main()
-    # runner = unittest.TextTestRunner(verbosity=2)
-    # runner.run(suite())
