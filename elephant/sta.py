@@ -264,6 +264,7 @@ def spike_field_coherence(signal, spiketrain, **kwargs):
         num_signals = 1
     else:
         raise ValueError("Empty analog signal.")
+    len_signals = signal.shape[0]
 
     # binning spiketrain if not already binned
     if isinstance(spiketrain, SpikeTrain):
@@ -284,11 +285,19 @@ def spike_field_coherence(signal, spiketrain, **kwargs):
             "The spiketrain and signal must have a "
             "common sampling frequency / binsize")
 
+    # calculate how many bins to add on the left of the binned spike train
+    delta_t = spiketrain.t_start - signal.t_start
+    if delta_t % spiketrain.binsize == 0:
+        left_edge = int((delta_t / spiketrain.binsize).magnitude)
+    else:
+        raise ValueError("Incompatible binning of spike train and LFP")
+    right_edge = int(left_edge + spiketrain.num_bins)
+
     # multiplying spiketrain
-    spiketrain_array = spiketrain.to_array()
-    spiketrains_array = np.squeeze(np.repeat(spiketrain_array,
-                                             repeats=num_signals,
-                                             axis=0)).transpose()
+    spiketrain_array = np.zeros((1, len_signals))
+    spiketrain_array[left_edge:right_edge] = spiketrain.to_array()
+    spiketrains_array = np.squeeze(
+        np.repeat(spiketrain_array, repeats=num_signals, axis=0)).transpose()
 
     # *** Main algorithm: ***
     frequencies, sfc = scipy.signal.coherence(
