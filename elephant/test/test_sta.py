@@ -211,11 +211,13 @@ class sfc_TestCase(unittest.TestCase):
         f0 = 20. * pq.Hz
         fs0 = 1 * pq.ms
         t0 = np.arange(
-            0, tlen0.rescale(pq.s).magnitude, fs0.rescale(pq.s).magnitude) * pq.s
+            0, tlen0.rescale(pq.s).magnitude,
+            fs0.rescale(pq.s).magnitude) * pq.s
         self.anasig0 = AnalogSignalArray(
             np.sin(2 * np.pi * (f0 * t0).simplified.magnitude),
             units=pq.mV, t_start=0 * pq.ms, sampling_period=fs0)
-        self.st0 = SpikeTrain(np.arange(0, tlen0.rescale(pq.ms).magnitude, 50) * pq.ms,
+        self.st0 = SpikeTrain(
+            np.arange(0, tlen0.rescale(pq.ms).magnitude, 50) * pq.ms,
             t_start=0 * pq.ms, t_stop=tlen0)
         self.bst0 = BinnedSpikeTrain(self.st0, binsize=fs0)
 
@@ -229,13 +231,38 @@ class sfc_TestCase(unittest.TestCase):
             np.sin(2 * np.pi * (f0 * t0).simplified.magnitude),
             units=pq.mV, t_start=0 * pq.ms, sampling_period=fs1)
         self.bst1 = BinnedSpikeTrain(
-            self.st0.time_slice(self.anasig3.t_start, self.anasig3.t_stop), binsize=fs1)
+            self.st0.time_slice(self.anasig3.t_start, self.anasig3.t_stop),
+            binsize=fs1)
 
         # analogsignal containing multiple traces
         self.anasig4 = AnalogSignalArray(
-            np.array([np.sin(2 * np.pi * (f0 * t0).simplified.magnitude),
-            np.sin(4 * np.pi * (f0 * t0).simplified.magnitude)]).transpose(),
+            np.array([
+                np.sin(2 * np.pi * (f0 * t0).simplified.magnitude),
+                np.sin(4 * np.pi * (f0 * t0).simplified.magnitude)]).
+            transpose(),
             units=pq.mV, t_start=0 * pq.ms, sampling_period=fs0)
+
+        # shortened spike train
+        self.st3 = SpikeTrain(
+            np.arange(
+                (tlen0.rescale(pq.ms).magnitude * .25),
+                (tlen0.rescale(pq.ms).magnitude * .75), 50) * pq.ms,
+            t_start=0 * pq.ms, t_stop=tlen0)
+        self.bst3 = BinnedSpikeTrain(self.st3, binsize=fs0)
+
+        self.st4 = SpikeTrain(np.arange(
+            (tlen0.rescale(pq.ms).magnitude * .25),
+            (tlen0.rescale(pq.ms).magnitude * .75), 50) * pq.ms,
+            t_start=5 * fs0, t_stop=tlen0 - 5 * fs0)
+        self.bst4 = BinnedSpikeTrain(self.st4, binsize=fs0)
+
+        # spike train with incompatible binsize
+        self.bst5 = BinnedSpikeTrain(self.st3, binsize=fs0 * 2.)
+
+        # spike train with same binsize as the analog signal, but with
+        # bin edges not aligned to the time axis of the analog signal
+        self.bst6 = BinnedSpikeTrain(
+            self.st3, binsize=fs0, t_start=4.5 * fs0, t_stop=tlen0 - 4.5 * fs0)
 
     #***********************************************************************
     #************************ Test for functionality ***********************
@@ -309,16 +336,39 @@ class sfc_TestCase(unittest.TestCase):
 
     def test_output_frequencies(self):
         nfft = 256
-        s, f = sta.spike_field_coherence(self.anasig3, self.bst1, nfft=nfft)
+        _, f = sta.spike_field_coherence(self.anasig3, self.bst1, nfft=nfft)
 
         # checking number of frequency samples
         self.assertEqual(len(f), nfft / 2 + 1)
 
         # checking values of frequency samples
-        assert_array_almost_equal(f, np.linspace(0,
-                                   self.anasig3.sampling_rate.rescale(
-                                       'Hz').magnitude / 2,
-            nfft / 2 + 1) * pq.Hz)
+        assert_array_almost_equal(
+            f, np.linspace(
+                0, self.anasig3.sampling_rate.rescale('Hz').magnitude / 2,
+                nfft / 2 + 1) * pq.Hz)
+
+    def test_short_spiketrain(self):
+        # This spike train has the same length as anasig0
+        s1, f1 = sta.spike_field_coherence(
+            self.anasig0, self.bst3, window='boxcar')
+
+        # This spike train has the same spikes as above, but is shorter than
+        # anasig0
+        s2, f2 = sta.spike_field_coherence(
+            self.anasig0, self.bst4, window='boxcar')
+
+        assert_array_equal(s1.magnitude, s2.magnitude)
+        assert_array_equal(f1.magnitude, f2.magnitude)
+
+    def test_incompatible_spiketrain_analogsignal(self):
+        # These spike trains have incompatible binning (binsize or alignment to
+        # time axis of analog signal)
+        self.assertRaises(ValueError,
+                          sta.spike_field_coherence,
+                          self.anasig0, self.bst5)
+        self.assertRaises(ValueError,
+                          sta.spike_field_coherence,
+                          self.anasig0, self.bst6)
 
 
 if __name__ == '__main__':

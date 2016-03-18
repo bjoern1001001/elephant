@@ -295,7 +295,7 @@ def spike_field_coherence(signal, spiketrain, **kwargs):
 
     # multiplying spiketrain
     spiketrain_array = np.zeros((1, len_signals))
-    spiketrain_array[left_edge:right_edge] = spiketrain.to_array()
+    spiketrain_array[0, left_edge:right_edge] = spiketrain.to_array()
     spiketrains_array = np.squeeze(
         np.repeat(spiketrain_array, repeats=num_signals, axis=0)).transpose()
 
