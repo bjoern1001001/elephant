@@ -34,8 +34,8 @@ def spike_triggered_average(signal, spiketrains, window):
     window : tuple of 2 Quantity objects with dimensions of time.
         'window' is the start time and the stop time, relative to a spike, of
         the time interval for signal averaging.
-        If the window size is not a multiple of the sampling interval of the 
-        signal the window will be extended to the next multiple. 
+        If the window size is not a multiple of the sampling interval of the
+        signal the window will be extended to the next multiple.
 
     Returns
     -------
@@ -48,7 +48,7 @@ def spike_triggered_average(signal, spiketrains, window):
         no spike was either given or all given spikes had to be ignored
         because of a too large averaging interval, the corresponding returned
         analog signal has all entries as nan. The number of used spikes and
-        unused spikes for each analog signal are returned as annotations to 
+        unused spikes for each analog signal are returned as annotations to
         the returned AnalogSignalArray object.
 
     Examples
@@ -79,7 +79,8 @@ def spike_triggered_average(signal, spiketrains, window):
                         "must be a time quantity.")
     if window_stoptime <= window_starttime:
         raise ValueError("The start time of the window (window[0]) must be "
-                         "earlier than the stop time of the window (window[1]).")
+                         "earlier than the stop time of the window "
+                         "(window[1]).")
 
     # checks on signal
     if not isinstance(signal, AnalogSignalArray):
@@ -134,10 +135,12 @@ def spike_triggered_average(signal, spiketrains, window):
     # *** Main algorithm: ***
 
     # window_bins: number of bins of the chosen averaging interval
-    window_bins = int(np.ceil(((window_stoptime - window_starttime) *
+    window_bins = int(np.ceil(((
+        window_stoptime - window_starttime) *
         signal.sampling_rate).simplified))
     # result_sta: array containing finally the spike-triggered averaged signal
-    result_sta = AnalogSignalArray(np.zeros((window_bins, num_signals)),
+    result_sta = AnalogSignalArray(
+        np.zeros((window_bins, num_signals)),
         sampling_rate=signal.sampling_rate, units=signal.units)
     # setting of correct times of the spike-triggered average
     # relative to the spike
@@ -154,7 +157,8 @@ def spike_triggered_average(signal, spiketrains, window):
                     spiketime + window_stoptime <= signal.t_stop):
                 # calculating the startbin in the analog signal of the
                 # averaging window for spike
-                startbin = int(np.floor(((spiketime + window_starttime -
+                startbin = int(np.floor(((
+                    spiketime + window_starttime -
                     signal.t_start) * signal.sampling_rate).simplified))
                 # adds the signal in selected interval relative to the spike
                 result_sta[:, i] += signal[
@@ -180,15 +184,20 @@ def spike_triggered_average(signal, spiketrains, window):
 
 def spike_field_coherence(signal, spiketrain, **kwargs):
     """
-    Calculates the spike-field coherence between analog signals and a
-    (binned) spike train using the scipy.signal.cohere(). Additional kwargs will
-    will be directly forwarded to scipy.signal.cohere(), except for the axis
-    parameter and the sampling frequency, which will be extracted from the input
-    signals. The spike_field_coherence function receives an analog signal
-    array and either a binned spike train or a spike train containing the
-    original spike times. In case of original spike times the spike train is
-    binned according to the sampling rate of the analog signal array.
-    The analog signal array can contain one or multiple signal traces. In case
+    Calculates the spike-field coherence between a analog signal(s) and a
+    (binned) spike train.
+
+    The current implementation makes use of scipy.signal.cohere(). Additional
+    kwargs will will be directly forwarded to scipy.signal.cohere(), except for
+    the axis parameter and the sampling frequency, which will be extracted from
+    the input signals.
+
+    The spike_field_coherence function receives an analog signal array and
+    either a binned spike train or a spike train containing the original spike
+    times. In case of original spike times the spike train is binned according
+    to the sampling rate of the analog signal array.
+
+    The AnalogSignal object can contain one or multiple signal traces. In case
     of multiple signal traces, the spike field coherence is calculated
     individually for each signal trace and the spike train.
 
@@ -196,20 +205,23 @@ def spike_field_coherence(signal, spiketrain, **kwargs):
     ----------
     signal : neo AnalogSignalArray object
         'signal' contains n analog signals.
-    spiketrain : one SpikeTrain
-        Spike train or binned spike train object. The binsize of the binned
-        spike train must match the sampling_rate of signal.
+    spiketrain : SpikeTrain or BinnedSpikeTrain
+        Single spike train to perform the analysis on. The binsize of the
+        binned spike train must match the sampling_rate of signal.
+
+    KWArgs
+    ------
+    All KWArgs are passed  to scipy.signal.cohere().
 
     Returns
     -------
     coherence : complex quantities.Quantity array
-                'coherence' contains the coherence values calculated for each
-                analog signal trace in combination with the spike train.
-                The first dimension corresponds to the frequency, the second
-                to the number of the signal trace.
+        contains the coherence values calculated for each analog signal trace
+        in combination with the spike train. The first dimension corresponds to
+        the frequency, the second to the number of the signal trace.
     frequencies : quantities.Quantity array
-                'frequency' contains the frequency values corresponding to the
-                first dimension of the 'coherence' array
+        contains the frequency values corresponding to the first dimension of
+        the 'coherence' array
 
     Examples
     --------
@@ -235,11 +247,11 @@ def spike_field_coherence(signal, spiketrain, **kwargs):
     >>> plt.show()
     """
 
-
     # spiketrains type check
     if not isinstance(spiketrain, (SpikeTrain, BinnedSpikeTrain)):
         raise TypeError(
-            "spiketrain must be of type SpikeTrain, not %s." % type(spiketrain))
+            "spiketrain must be of type SpikeTrain or BinnedSpikeTrain, "
+            "not %s." % type(spiketrain))
 
     # checks on analogsignal
     if not isinstance(signal, AnalogSignalArray):
@@ -251,28 +263,26 @@ def spike_field_coherence(signal, spiketrain, **kwargs):
     elif len(signal.shape) == 1:
         num_signals = 1
     else:
-        raise ValueError("Empty analog signal, hence no averaging possible.")
+        raise ValueError("Empty analog signal.")
 
     # binning spiketrain if not already binned
-    if isinstance(spiketrain,SpikeTrain):
-        spiketrain = BinnedSpikeTrain(spiketrain,
-                                      binsize=signal.sampling_period)
+    if isinstance(spiketrain, SpikeTrain):
+        spiketrain = BinnedSpikeTrain(
+            spiketrain, binsize=signal.sampling_period)
 
     # checking the start and stop times of signal and spiketrains
     if spiketrain.t_start < signal.t_start:
         raise ValueError(
-            "The spiketrain starts earlier than "
-            "the analog signal.")
+            "The spiketrain starts earlier than the analog signal.")
     if spiketrain.t_stop > signal.t_stop:
         raise ValueError(
-            "The spiketrain stops later than "
-            "the analog signal.")
+            "The spiketrain stops later than the analog signal.")
 
     # checking the time resolution of both signals
     if spiketrain.binsize != signal.sampling_period:
         raise ValueError(
-            "The spiketrain and signal must have a"
-            " common sampling frequency / binsize")
+            "The spiketrain and signal must have a "
+            "common sampling frequency / binsize")
 
     # multiplying spiketrain
     spiketrain_array = spiketrain.to_array()
@@ -280,12 +290,11 @@ def spike_field_coherence(signal, spiketrain, **kwargs):
                                              repeats=num_signals,
                                              axis=0)).transpose()
 
-
     # *** Main algorithm: ***
-    frequencies, sfc = scipy.signal.coherence(spiketrains_array,
-                              signal.magnitude,
-                              fs=signal.sampling_rate.rescale('Hz').magnitude,
-                              axis=0, **kwargs)
+    frequencies, sfc = scipy.signal.coherence(
+        spiketrains_array, signal.magnitude,
+        fs=signal.sampling_rate.rescale('Hz').magnitude,
+        axis=0, **kwargs)
 
     return (pq.Quantity(sfc, units=pq.dimensionless),
             pq.Quantity(frequencies, units=pq.Hz))

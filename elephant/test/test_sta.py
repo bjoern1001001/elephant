@@ -210,7 +210,8 @@ class sfc_TestCase(unittest.TestCase):
         tlen0 = 100 * pq.s
         f0 = 20. * pq.Hz
         fs0 = 1 * pq.ms
-        t0 = np.arange(0, tlen0.rescale(pq.s).magnitude, fs0.rescale(pq.s).magnitude) * pq.s
+        t0 = np.arange(
+            0, tlen0.rescale(pq.s).magnitude, fs0.rescale(pq.s).magnitude) * pq.s
         self.anasig0 = AnalogSignalArray(
             np.sin(2 * np.pi * (f0 * t0).simplified.magnitude),
             units=pq.mV, t_start=0 * pq.ms, sampling_period=fs0)
@@ -219,15 +220,16 @@ class sfc_TestCase(unittest.TestCase):
         self.bst0 = BinnedSpikeTrain(self.st0, binsize=fs0)
 
         # shortened analogsignals
-        self.anasig1 = self.anasig0.time_slice(1*pq.s,None)
-        self.anasig2 = self.anasig0.time_slice(None,99*pq.s)
+        self.anasig1 = self.anasig0.time_slice(1 * pq.s, None)
+        self.anasig2 = self.anasig0.time_slice(None, 99 * pq.s)
 
         # increased sampling frequency
         fs1 = 0.1 * pq.ms
         self.anasig3 = AnalogSignalArray(
             np.sin(2 * np.pi * (f0 * t0).simplified.magnitude),
             units=pq.mV, t_start=0 * pq.ms, sampling_period=fs1)
-        self.bst1 = BinnedSpikeTrain(self.st0.time_slice(self.anasig3.t_start,self.anasig3.t_stop), binsize=fs1)
+        self.bst1 = BinnedSpikeTrain(
+            self.st0.time_slice(self.anasig3.t_start, self.anasig3.t_stop), binsize=fs1)
 
         # analogsignal containing multiple traces
         self.anasig4 = AnalogSignalArray(
@@ -235,20 +237,19 @@ class sfc_TestCase(unittest.TestCase):
             np.sin(4 * np.pi * (f0 * t0).simplified.magnitude)]).transpose(),
             units=pq.mV, t_start=0 * pq.ms, sampling_period=fs0)
 
-
     #***********************************************************************
     #************************ Test for functionality ***********************
 
     def test_wrong_input_type(self):
         self.assertRaises(TypeError,
                           sta.spike_field_coherence,
-                          np.array([1,2,3]), self.bst0)
+                          np.array([1, 2, 3]), self.bst0)
         self.assertRaises(TypeError,
                           sta.spike_field_coherence,
-                          self.anasig0, [1,2,3])
+                          self.anasig0, [1, 2, 3])
         self.assertRaises(ValueError,
                           sta.spike_field_coherence,
-                          self.anasig0.duplicate_with_new_array([]),self.bst0)
+                          self.anasig0.duplicate_with_new_array([]), self.bst0)
 
     def test_start_stop_times_out_of_range(self):
         self.assertRaises(ValueError,
@@ -268,22 +269,21 @@ class sfc_TestCase(unittest.TestCase):
         # single analogsignal trace and single spike train
         s_single, f_single = sta.spike_field_coherence(self.anasig0, self.bst0)
 
-        self.assertEqual(len(f_single.shape),1)
-        self.assertEqual(len(s_single.shape),1)
+        self.assertEqual(len(f_single.shape), 1)
+        self.assertEqual(len(s_single.shape), 1)
 
         # multiple analogsignal traces and single spike train
         s_multi, f_multi = sta.spike_field_coherence(self.anasig4, self.bst0)
 
-        self.assertEqual(len(f_multi.shape),1)
-        self.assertEqual(len(s_multi.shape),2)
+        self.assertEqual(len(f_multi.shape), 1)
+        self.assertEqual(len(s_multi.shape), 2)
 
         # frequencies are identical since same sampling frequency was used
         # in both cases and data length is the same
-        assert_array_equal(f_single,f_multi)
+        assert_array_equal(f_single, f_multi)
         # coherences of s_single and first signal in s_multi are identical,
         # since first analogsignal trace in anasig4 is same as in anasig0
-        assert_array_equal(s_single,s_multi[:,0])
-
+        assert_array_equal(s_single, s_multi[:, 0])
 
     def test_non_binned_spiketrain_input(self):
         s, f = sta.spike_field_coherence(self.anasig0, self.st0)
@@ -298,7 +298,8 @@ class sfc_TestCase(unittest.TestCase):
     #************************ Test for typical values **********************
 
     def test_spike_field_coherence_perfect_coherence(self):
-        s, f = sta.spike_field_coherence(self.anasig0, self.bst0, window='boxcar')
+        s, f = sta.spike_field_coherence(
+            self.anasig0, self.bst0, window='boxcar')
 
         f_ind = np.where(f >= 19.)[0][0]
         max_ind = np.argmax(s[1:]) + 1
@@ -308,16 +309,16 @@ class sfc_TestCase(unittest.TestCase):
 
     def test_output_frequencies(self):
         nfft = 256
-        s, f = sta.spike_field_coherence(self.anasig3, self.bst1,nfft=nfft)
+        s, f = sta.spike_field_coherence(self.anasig3, self.bst1, nfft=nfft)
 
         # checking number of frequency samples
-        self.assertEqual(len(f),nfft/2+1)
+        self.assertEqual(len(f), nfft / 2 + 1)
 
         # checking values of frequency samples
-        assert_array_almost_equal(f,np.linspace(0,
-                                   self.anasig3.sampling_rate.rescale('Hz').magnitude/2,
-                                   nfft/2+1) * pq.Hz)
-
+        assert_array_almost_equal(f, np.linspace(0,
+                                   self.anasig3.sampling_rate.rescale(
+                                       'Hz').magnitude / 2,
+            nfft / 2 + 1) * pq.Hz)
 
 
 if __name__ == '__main__':
