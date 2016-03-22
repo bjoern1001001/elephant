@@ -211,39 +211,46 @@ def spike_field_coherence(signal, spiketrain, **kwargs):
 
     KWArgs
     ------
-    All KWArgs are passed  to scipy.signal.cohere().
+    All KWArgs are passed to scipy.signal.cohere().
 
     Returns
     -------
-    coherence : complex quantities.Quantity array
+    coherence : complex Quantity array
         contains the coherence values calculated for each analog signal trace
         in combination with the spike train. The first dimension corresponds to
         the frequency, the second to the number of the signal trace.
-    frequencies : quantities.Quantity array
+    frequencies : Quantity array
         contains the frequency values corresponding to the first dimension of
         the 'coherence' array
 
-    Examples
-    --------
+    Example
+    -------
+
+    Plot the SFC between a regular spike train at 20 Hz, and two sinusoidal
+    time series at 20 Hz and 23 Hz, respectively.
+
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
-    >>> import quantities as pq
+    >>> from quantities import ms, mV, Hz, kHz
     >>> import neo, elephant
 
-    >>> t = pq.Quantity(range(10000),units='ms').rescale('s')
-    >>> times = t.magnitude
-    >>> signal = neo.AnalogSignalArray(np.array([np.sin(50*2*np.pi*times),
-    ...                                         np.sin(100*2*np.pi*times)]).T,
-    ...                               units=pq.mV, sampling_rate=1*pq.kHz)
-    >>> spiketrain = neo.SpikeTrain(range(0,10000,100), units='ms',
-    ...                                   t_start=0*pq.s, t_stop=10*pq.s)
-    >>> sfc, freqs = elephant.sta.spike_field_coherence(signal, spiketrain,
-    ...                                             window='boxcar')
+    >>> t = pq.Quantity(range(10000),units='ms')
+    >>> f1, f2 = 20. * Hz, 23. * Hz
+    >>> signal = neo.AnalogSignal(np.array([
+            np.sin(f1 * 2. * np.pi * t.rescale(s)),
+            np.sin(f2 * 2. * np.pi * t.rescale(s))]).T,
+            units=pq.mV, sampling_rate=1. * kHz)
+    >>> spiketrain = neo.SpikeTrain(
+        range(t[0], t[-1], 50), units='ms',
+        t_start=t[0], t_stop=t[-1])
+    >>> sfc, freqs = elephant.sta.spike_field_coherence(
+        signal, spiketrain, window='boxcar')
 
-    >>> plt.plot(freqs,sfc[:,0])
-    >>> plt.plot(freqs,sfc[:,1])
+    >>> plt.plot(freqs, sfc[:,0])
+    >>> plt.plot(freqs, sfc[:,1])
     >>> plt.xlabel('Frequency [Hz]')
     >>> plt.ylabel('SFC')
+    >>> plt.xlim((0, 60))
     >>> plt.show()
     """
 
@@ -266,12 +273,12 @@ def spike_field_coherence(signal, spiketrain, **kwargs):
         raise ValueError("Empty analog signal.")
     len_signals = signal.shape[0]
 
-    # binning spiketrain if not already binned
+    # bin spiketrain if necessary
     if isinstance(spiketrain, SpikeTrain):
         spiketrain = BinnedSpikeTrain(
             spiketrain, binsize=signal.sampling_period)
 
-    # checking the start and stop times of signal and spiketrains
+    # check the start and stop times of signal and spike trains
     if spiketrain.t_start < signal.t_start:
         raise ValueError(
             "The spiketrain starts earlier than the analog signal.")
@@ -279,7 +286,7 @@ def spike_field_coherence(signal, spiketrain, **kwargs):
         raise ValueError(
             "The spiketrain stops later than the analog signal.")
 
-    # checking the time resolution of both signals
+    # check equal time resolution for both signals
     if spiketrain.binsize != signal.sampling_period:
         raise ValueError(
             "The spiketrain and signal must have a "
@@ -293,13 +300,13 @@ def spike_field_coherence(signal, spiketrain, **kwargs):
         raise ValueError("Incompatible binning of spike train and LFP")
     right_edge = int(left_edge + spiketrain.num_bins)
 
-    # multiplying spiketrain
+    # duplicate spike trains
     spiketrain_array = np.zeros((1, len_signals))
     spiketrain_array[0, left_edge:right_edge] = spiketrain.to_array()
     spiketrains_array = np.squeeze(
         np.repeat(spiketrain_array, repeats=num_signals, axis=0)).transpose()
 
-    # *** Main algorithm: ***
+    # calculate coherence
     frequencies, sfc = scipy.signal.coherence(
         spiketrains_array, signal.magnitude,
         fs=signal.sampling_rate.rescale('Hz').magnitude,

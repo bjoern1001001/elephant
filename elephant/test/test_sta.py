@@ -264,8 +264,9 @@ class sfc_TestCase(unittest.TestCase):
         self.bst6 = BinnedSpikeTrain(
             self.st3, binsize=fs0, t_start=4.5 * fs0, t_stop=tlen0 - 4.5 * fs0)
 
-    #***********************************************************************
-    #************************ Test for functionality ***********************
+    # =========================================================================
+    # Tests for correct input handling
+    # =========================================================================
 
     def test_wrong_input_type(self):
         self.assertRaises(TypeError,
@@ -291,6 +292,16 @@ class sfc_TestCase(unittest.TestCase):
         self.assertRaises(ValueError,
                           sta.spike_field_coherence,
                           self.anasig0, self.bst1)
+
+    def test_incompatible_spiketrain_analogsignal(self):
+        # These spike trains have incompatible binning (binsize or alignment to
+        # time axis of analog signal)
+        self.assertRaises(ValueError,
+                          sta.spike_field_coherence,
+                          self.anasig0, self.bst5)
+        self.assertRaises(ValueError,
+                          sta.spike_field_coherence,
+                          self.anasig0, self.bst6)
 
     def test_signal_dimensions(self):
         # single analogsignal trace and single spike train
@@ -321,10 +332,12 @@ class sfc_TestCase(unittest.TestCase):
         self.assertEqual(f_ind, max_ind)
         self.assertAlmostEqual(s[f_ind], 1., delta=0.01)
 
-    #***********************************************************************
-    #************************ Test for typical values **********************
+    # =========================================================================
+    # Tests for correct return values
+    # =========================================================================
 
     def test_spike_field_coherence_perfect_coherence(self):
+        # check for detection of 20Hz peak in anasig0/bst0
         s, f = sta.spike_field_coherence(
             self.anasig0, self.bst0, window='boxcar')
 
@@ -338,37 +351,28 @@ class sfc_TestCase(unittest.TestCase):
         nfft = 256
         _, f = sta.spike_field_coherence(self.anasig3, self.bst1, nfft=nfft)
 
-        # checking number of frequency samples
+        # check number of frequency samples
         self.assertEqual(len(f), nfft / 2 + 1)
 
-        # checking values of frequency samples
+        # check values of frequency samples
         assert_array_almost_equal(
             f, np.linspace(
                 0, self.anasig3.sampling_rate.rescale('Hz').magnitude / 2,
                 nfft / 2 + 1) * pq.Hz)
 
     def test_short_spiketrain(self):
-        # This spike train has the same length as anasig0
+        # this spike train has the same length as anasig0
         s1, f1 = sta.spike_field_coherence(
             self.anasig0, self.bst3, window='boxcar')
 
-        # This spike train has the same spikes as above, but is shorter than
+        # this spike train has the same spikes as above, but is shorter than
         # anasig0
         s2, f2 = sta.spike_field_coherence(
             self.anasig0, self.bst4, window='boxcar')
 
+        # the results above should be the same, nevertheless
         assert_array_equal(s1.magnitude, s2.magnitude)
         assert_array_equal(f1.magnitude, f2.magnitude)
-
-    def test_incompatible_spiketrain_analogsignal(self):
-        # These spike trains have incompatible binning (binsize or alignment to
-        # time axis of analog signal)
-        self.assertRaises(ValueError,
-                          sta.spike_field_coherence,
-                          self.anasig0, self.bst5)
-        self.assertRaises(ValueError,
-                          sta.spike_field_coherence,
-                          self.anasig0, self.bst6)
 
 
 if __name__ == '__main__':
