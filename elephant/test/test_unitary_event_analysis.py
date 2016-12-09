@@ -311,7 +311,7 @@ class UETestCase(unittest.TestCase):
         binsize = 5*pq.ms
         winstep = 20*pq.ms
         pattern_hash = [3]
-        UE_dic = ue.jointJ_window_analysis(data, binsize, winsize, winstep, pattern_hash)
+        UE_dic = ue.unitary_event_analysis(data, binsize, winsize, winstep, pattern_hash)
         expected_Js = np.array(
             [ 0.57953708,  0.47348757,  0.1729669 ,  
               0.01883295, -0.21934742,-0.80608759])

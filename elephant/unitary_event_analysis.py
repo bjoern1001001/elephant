@@ -15,17 +15,23 @@ References:
   - Gruen S (2009) Data-driven significance estimation of precise spike
     correlation. J Neurophysiology 101:1126-1140 (invited review)
 
+Author Contributions:
+ - Vahid Rostami (VH)
+ - Sonja Gruen (SG)
+ - Markus Diesmann  (MD)
+VH implemented the method, SG and MD provided input
+
+
 :copyright: Copyright 2015-2016 by the Elephant team, see AUTHORS.txt.
 :license: Modified BSD, see LICENSE.txt for details.
 """
 
-
-import numpy as np
-import quantities as pq
-import neo
+from elephant.conversion import BinnedSpikeTrain
 import warnings
-import elephant.conversion as conv
+import numpy as np
 import scipy
+import neo
+import quantities as pq
 
 
 def hash_from_pattern(m, N, base=2):
@@ -86,7 +92,7 @@ def hash_from_pattern(m, N, base=2):
         raise ValueError('patterns should be zero or one')
 
     # generate the representation
-    v = np.array([base**x for x in range(N)])
+    v = np.array([base ** x for x in range(N)])
     # reverse the order
     v = v[np.argsort(-v)]
     # calculate the binary number by use of scalar product
@@ -135,7 +141,7 @@ def inverse_hash_from_pattern(h, N, base=2):
 
     # check if the hash values are not greater than the greatest possible
     # value for N neurons with the given base
-    if np.any(h > np.sum([base**x for x in range(N)])):
+    if np.any(h > np.sum([base ** x for x in range(N)])):
         raise ValueError(
             "hash value is not compatible with the number of neurons N")
     # check if the hash values are integer
@@ -299,7 +305,7 @@ def _n_exp_mat_analytic(mat, N, pattern_hash):
     # multipyling the marginal probability of neurons with regard to the
     # pattern
     pmat = np.multiply(m, np.tile(marg_prob, (1, nrep))) +\
-           np.multiply(1 - m, np.tile(1 - marg_prob, (1, nrep)))
+        np.multiply(1 - m, np.tile(1 - marg_prob, (1, nrep)))
     return np.prod(pmat, axis=0) * float(np.shape(mat)[1])
 
 
@@ -660,115 +666,125 @@ def _UE(mat, N, pattern_hash, method='analytic_TrialByTrial', **kwargs):
     return Js, rate_avg, n_exp, n_emp, indices
 
 
-def jointJ_window_analysis(
-        data, binsize, winsize, winstep, pattern_hash,
+def unitary_event_analysis(
+        data, bin_size, window_size, window_step, pattern_hash,
         method='analytic_TrialByTrial', t_start=None,
         t_stop=None, binary=True, **kwargs):
     """
-    Calculates the joint surprise in a sliding window fashion
+    Performs the Unitary Event Analysis in a sliding window fashion.
+
+    #TODO: Describe the method
 
     Parameters:
     ----------
-    data: list of neo.SpikeTrain objects
-          list of spike trains in different trials
-                                        0-axis --> Trials
-                                        1-axis --> Neurons
-                                        2-axis --> Spike times
-    binsize: Qunatity scalar with dimension time
-           size of bins for descritizing spike trains
-    winsize: Qunatity scalar with dimension time
-           size of the window of analysis
-    winstep: Qunatity scalar with dimension time
-           size of the window step
+    data: list of lists of `SpikeTrain` objects
+        Contains the spike data to be analyzed. `data` is constructed such
+        that `data[t][n]` contains the `SpikeTrain` object that refers to
+        neuron `n` in trial `t`. For any trial `t` and any neuron `n`, the
+        `SpikeTrain` objects are assumed to share a common time axis.
+    bin_size: `Quantity` scalar (unit: time)
+           Size of bins for discretizing spike trains.
+    window_size: `Quantity` scalar (unit: time)
+           Size of the sliding analysis window.
+    window_step: `Quantity` scalar (unit: time)
+           Stepsize by the window is moved.
     pattern_hash: list of integers
-           list of interested patterns in hash values
-           (see hash_from_pattern and inverse_hash_from_pattern functions)
+           List of patterns to include in the analysis. Patterns are identified
+           by their hash values as returned by the function
+           `hash_from_pattern` (see also function `inverse_hash_from_pattern`).
     method: string
-            method with which the unitary events whould be computed
-            'analytic_TrialByTrial' -- > calculate the expectency
-            (analytically) on each trial, then sum over all trials.
-            'analytic_TrialAverage' -- > calculate the expectency
-            by averaging over trials.
-            (cf. Gruen et al. 2003)
-            'surrogate_TrialByTrial' -- > calculate the distribution 
-            of expected coincidences by spike time randomzation in 
-            each trial and sum over trials.
-            Default is 'analytic_trialByTrial'
-    t_start: float or Quantity scalar, optional
-             The start time to use for the time points.
-             If not specified, retrieved from the `t_start`
-             attribute of `spiketrain`.
-    t_stop: float or Quantity scalar, optional
-            The start time to use for the time points.
-            If not specified, retrieved from the `t_stop`
-            attribute of `spiketrain`.
+            Method to calculate the Unitary Events.
+            'analytic_TrialByTrial':
+                calculate the expectancy (analytically) on each trial, then sum
+                over all trials.
+            'analytic_TrialAverage':
+                calculate the expectancy by averaging over trials.
+                (cf. Gruen et al. 2003)
+            'surrogate_TrialByTrial':
+                calculate the distribution of expected coincidences by spike
+                time randomization in each trial and sum over trials.
+
+            Default:'analytic_trialByTrial'
+    t_start: None or Quantity scalar (unit time)
+             The start time of the analysis. #TODO position of window?
+             If **None**, retrieved from the `t_start` attribute of the
+             `SpikeTrain` object.
+
+            Default: None.
+    t_stop: None or Quantity scalar, optional
+            The stop time of the analysis.
+            If **None**, retrieved from the `t_stop` attribute of the
+            `SpikeTrain` object.
+
+            Default: None
 
     kwargs:
     -------
-    n_surr: integer
-            number of surrogate to be used
-            Default is 100
+    n_surrogates: integer
+            Number of surrogates to be used
+
+            Default: 100
 
 
     Returns:
-    -------
+    --------
     result: dictionary
-          Js: list of float
-                 JointSurprise of different given patterns within each window
-                 shape: different pattern hash --> 0-axis
-                        different window --> 1-axis
-          indices: list of list of integers
-                 list of indices of pattern whithin each window
-                 shape: different pattern hash --> 0-axis
-                        different window --> 1-axis
-          n_emp: list of integers
-                 empirical number of each observed pattern.
-                 shape: different pattern hash --> 0-axis
-                        different window --> 1-axis
-          n_exp: list of floats
-                 expeced number of each pattern.
-                 shape: different pattern hash --> 0-axis
-                        different window --> 1-axis
-          rate_avg: list of floats
-                 average firing rate of each neuron
-                 shape: different pattern hash --> 0-axis
-                        different window --> 1-axis
+        Dictionary containing a summary of analysis results. Each key 'k' in
+        the dictionary stores a list of lists such that result['k'][p][w]
+        contains the resulting measurement k for the pattern `pattern_hash[p]`
+        calculated at window position `w`. The dictionary contains the
+        following keys:
+        Js: list of list of float
+            TODO: is this really a list of list?
+        indices: list of list of integers
+            indices of pattern within each window TODO: ???
+        n_emp: list of integers
+             Empirical number of occurrences of the pattern.
+        n_exp: list of floats
+             Expected number of occurrences of the pattern.
+        rate_avg: list of floats
+             Average firing rate of each neuron.
+    See also:
+    ---------
+    hash_from_pattern
+    inverse_hash_from_pattern
 
     """
     if not isinstance(data[0][0], neo.SpikeTrain):
         raise ValueError(
             "structure of the data is not correct: 0-axis should be trials, 1-axis units and 2-axis neo spike trains")
 
+    # TODO: Handling of t_start and t_stop not adequate, consistency check needed
     if t_start is None:
         t_start = data[0][0].t_start.rescale('ms')
     if t_stop is None:
         t_stop = data[0][0].t_stop.rescale('ms')
 
     # position of all windows (left edges)
-    t_winpos = _winpos(t_start, t_stop, winsize, winstep, position='left-edge')
-    t_winpos_bintime = _bintime(t_winpos, binsize)
+    t_winpos = _winpos(t_start, t_stop, window_size, window_step, position='left-edge')
+    t_winpos_bintime = _bintime(t_winpos, bin_size)
 
-    winsize_bintime = _bintime(winsize, binsize)
-    winstep_bintime = _bintime(winstep, binsize)
+    winsize_bintime = _bintime(window_size, bin_size)
+    winstep_bintime = _bintime(window_step, bin_size)
 
-    if winsize_bintime * binsize != winsize:
+    if winsize_bintime * bin_size != window_size:
         warnings.warn(
-            "ratio between winsize and binsize is not integer -- "
-            "the actual number for window size is " + str(winsize_bintime * binsize))
+            "ratio between window_size and bin_size is not integer -- "
+            "the actual number for window size is " + str(winsize_bintime * bin_size))
 
-    if winstep_bintime * binsize != winstep:
+    if winstep_bintime * bin_size != window_step:
         warnings.warn(
-            "ratio between winsize and binsize is not integer -- "
-            "the actual number for window size is" + str(winstep_bintime * binsize))
+            "ratio between window_size and bin_size is not integer -- "
+            "the actual number for window size is" + str(winstep_bintime * bin_size))
 
     num_tr, N = np.shape(data)[:2]
 
-    n_bins = int((t_stop - t_start) / binsize)
+    n_bins = int((t_stop - t_start) / bin_size)
 
     mat_tr_unit_spt = np.zeros((len(data), N, n_bins))
     for tr, sts in enumerate(data):
-        bs = conv.BinnedSpikeTrain(
-            sts, t_start=t_start, t_stop=t_stop, binsize=binsize)
+        bs = BinnedSpikeTrain(
+            sts, t_start=t_start, t_stop=t_stop, binsize=bin_size)
         if binary is True:
             mat = bs.to_bool_array()
         else:
@@ -786,12 +802,13 @@ def jointJ_window_analysis(
     for i, win_pos in enumerate(t_winpos_bintime):
         mat_win = mat_tr_unit_spt[:, :, win_pos:win_pos + winsize_bintime]
         if method == 'surrogate_TrialByTrial':
-            if 'n_surr' in kwargs:
-                n_surr = kwargs['n_surr']
+            if 'n_surrogates' in kwargs:
+                n_surrogates = kwargs['n_surrogates']
             else:
-                n_surr = 100
+
+                n_surrogates = 100
             Js_win[i], rate_avg[i], n_exp_win[i], n_emp_win[i], indices_lst = _UE(
-                mat_win, N, pattern_hash, method, n_surr=n_surr)
+                mat_win, N, pattern_hash, method, n_surr=n_surrogates)
         else:
             Js_win[i], rate_avg[i], n_exp_win[i], n_emp_win[
                 i], indices_lst = _UE(mat_win, N, pattern_hash, method)
@@ -799,4 +816,4 @@ def jointJ_window_analysis(
             if len(indices_lst[j][0]) > 0:
                 indices_win[
                     'trial' + str(j)] = np.append(indices_win['trial' + str(j)], indices_lst[j][0] + win_pos)
-    return {'Js': Js_win, 'indices': indices_win, 'n_emp': n_emp_win, 'n_exp': n_exp_win, 'rate_avg': rate_avg / binsize}
+    return {'Js': Js_win, 'indices': indices_win, 'n_emp': n_emp_win, 'n_exp': n_exp_win, 'rate_avg': rate_avg / bin_size}
