@@ -589,7 +589,8 @@ def oldfct_instantaneous_rate(spiketrain, sampling_period, form,
 
 
 def instantaneous_rate(spiketrain, sampling_period, kernel='auto',
-                       cutoff=5.0, t_start=None, t_stop=None, trim=False):
+                       cutoff=5.0, t_start=None, t_stop=None, trim=False,
+                       center_kernel=True):
 
     """
     Estimates instantaneous firing rate by kernel convolution.
@@ -638,6 +639,12 @@ def instantaneous_rate(spiketrain, sampling_period, kernel='auto',
         Transformation by a total of two times the size of the kernel, and
         t_start and t_stop are adjusted.
         Default: False
+    center_kernel : bool (optional)
+        If set to True, the kernel will be translated such that its median is
+        centered on the spike, thus putting equal weight before and after the
+        spike. If False, no adjustment is performed such that the spike sits at
+        the origin of the kernel.
+        Default: True
 
     Returns
     -------
@@ -757,14 +764,22 @@ def instantaneous_rate(spiketrain, sampling_period, kernel='auto',
                       "precision errors.")
 
     if not trim:
-        r = r[kernel.median_index(t_arr):-(kernel(t_arr).size -
-                                           kernel.median_index(t_arr))]
+        if center_kernel:
+            r = r[kernel.median_index(t_arr):-(kernel(t_arr).size -
+                                               kernel.median_index(t_arr))]
+        else:
+            r = r[kernel(t_arr).size/2:-(kernel(t_arr).size/2)]
     elif trim:
-        r = r[2 * kernel.median_index(t_arr):-2 * (kernel(t_arr).size -
-                                                   kernel.median_index(t_arr))]
-        t_start += kernel.median_index(t_arr) * spiketrain.units
-        t_stop -= (kernel(t_arr).size -
-                   kernel.median_index(t_arr)) * spiketrain.units
+        if center_kernel:
+            r = r[2 * kernel.median_index(t_arr):-2 * (kernel(t_arr).size -
+                                                       kernel.median_index(t_arr))]
+            t_start += kernel.median_index(t_arr) * spiketrain.units
+            t_stop -= (kernel(t_arr).size -
+                       kernel.median_index(t_arr)) * spiketrain.units
+        else:
+            r = r[kernel(t_arr).size:-(kernel(t_arr).size)]
+            t_start += (kernel(t_arr).size/2) * spiketrain.units
+            t_stop -= (kernel(t_arr).size/2) * spiketrain.units
 
     rate = neo.AnalogSignal(signal=r.reshape(r.size, 1),
                             sampling_period=sampling_period,
