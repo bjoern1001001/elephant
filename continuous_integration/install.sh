@@ -29,8 +29,8 @@ if [[ "$DISTRIB" == "conda_min" ]]; then
 
     # Configure the conda environment and put it in the path using the
     # provided versions
-    conda create -n testenv --yes python=$PYTHON_VERSION pip nose coverage six \
-        numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION
+    conda create -n testenv --yes python=$PYTHON_VERSION pip nose coverage \
+        six=$SIX_VERSION numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION
     source activate testenv
     conda install libgfortran=1
 
@@ -58,10 +58,9 @@ elif [[ "$DISTRIB" == "conda" ]]; then
 
     # Configure the conda environment and put it in the path using the
     # provided versions
-    conda create -n testenv --yes python=$PYTHON_VERSION pip nose coverage six \
+    conda create -n testenv --yes python=$PYTHON_VERSION pip nose coverage six=$SIX_VERSION \
         numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION pandas=$PANDAS_VERSION scikit-learn
     source activate testenv
-    conda install libgfortran=1
 
     if [[ "$INSTALL_MKL" == "true" ]]; then
         # Make sure that MKL is used
@@ -78,16 +77,17 @@ elif [[ "$DISTRIB" == "conda" ]]; then
     python -c "import pandas; import os; assert os.getenv('PANDAS_VERSION') == pandas.__version__"
 
 elif [[ "$DISTRIB" == "ubuntu" ]]; then
-    deactivate
+    # deactivate
     # Create a new virtualenv using system site packages for numpy and scipy
-    virtualenv --system-site-packages testenv
-    source testenv/bin/activate
+    # virtualenv --system-site-packages testenv
+    # source testenv/bin/activate
     pip install nose
     pip install coverage
+    pip install quantities
     pip install numpy==$NUMPY_VERSION
     pip install scipy==$SCIPY_VERSION
-    pip install six
-    pip install quantities
+    pip install six==$SIX_VERSION
+ 
 fi
 
 if [[ "$COVERAGE" == "true" ]]; then
@@ -95,9 +95,9 @@ if [[ "$COVERAGE" == "true" ]]; then
 fi
 
 # pip install neo==0.3.3
-wget https://github.com/NeuralEnsemble/python-neo/archive/snapshot-20150821.tar.gz
-tar -xzvf snapshot-20150821.tar.gz
-pushd python-neo-snapshot-20150821
+wget https://github.com/NeuralEnsemble/python-neo/archive/master.tar.gz
+tar -xzvf master.tar.gz
+pushd python-neo-master
 python setup.py install
 popd
 

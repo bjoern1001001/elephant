@@ -222,7 +222,7 @@ def n_emp_mat_sum_trial(mat, N, pattern_hash):
 
     Parameters:
     -----------
-    mat: 3d numpy array or elephant BinndedSpikeTrain object
+    mat: 3d numpy array or elephant BinnedSpikeTrain object
            Binned spike trains represented as a binary matrix (i.e., matrix of 0's and 1's), 
            segmented into trials. Trials should contain an identical number of neurons and 
            an identical number of time bins.
@@ -400,14 +400,15 @@ def n_exp_mat(mat, N, pattern_hash, method='analytic', n_surr=1):
         return _n_exp_mat_surrogate(mat, N, pattern_hash, n_surr)
 
 
-def n_exp_mat_sum_trial(mat, N, pattern_hash, method='analytic_TrialByTrial', **kwargs):
+def n_exp_mat_sum_trial(
+        mat, N, pattern_hash, method='analytic_TrialByTrial', **kwargs):
     """
     Calculates the expected joint probability
     for each spike pattern sum over trials
 
     Parameters:
     -----------
-    mat: 3d numpy array or elephant BinndedSpikeTrain object
+    mat: 3d numpy array or elephant BinnedSpikeTrain object
            Binned spike trains represented as a binary matrix (i.e., matrix of 0's and 1's), 
            segmented into trials. Trials should contain an identical number of neurons and 
            an identical number of time bins.
@@ -486,7 +487,8 @@ def n_exp_mat_sum_trial(mat, N, pattern_hash, method='analytic_TrialByTrial', **
     return n_exp
 
 
-def gen_pval_anal(mat, N, pattern_hash, method='analytic_TrialByTrial', **kwargs):
+def gen_pval_anal(
+        mat, N, pattern_hash, method='analytic_TrialByTrial', **kwargs):
     """
     computes the expected coincidences and a function to calculate
     p-value for given empirical coincidences
@@ -498,7 +500,7 @@ def gen_pval_anal(mat, N, pattern_hash, method='analytic_TrialByTrial', **kwargs
 
     Parameters:
     -----------
-    mat: 3d numpy array or elephant BinndedSpikeTrain object
+    mat: 3d numpy array or elephant BinnedSpikeTrain object
            Binned spike trains represented as a binary matrix (i.e., matrix of 0's and 1's), 
            segmented into trials. Trials should contain an identical number of neurons and 
            an identical number of time bins.
@@ -570,7 +572,7 @@ def gen_pval_anal(mat, N, pattern_hash, method='analytic_TrialByTrial', **kwargs
             if len(n_emp) > 1:
                 raise ValueError(
                     'in surrogate method the p_value can be calculated only for one pattern!')
-            return np.sum(exp_dist[n_emp[0]:])
+            return np.sum(exp_dist[int(n_emp[0]):])
 
     return pval, n_exp
 
@@ -661,6 +663,7 @@ def _UE(mat, N, pattern_hash, method='analytic_TrialByTrial', **kwargs):
             n_surr = 1
         dist_exp, n_exp = gen_pval_anal(
             mat, N, pattern_hash, method, n_surr=n_surr)
+        n_exp = np.mean(n_exp)
     elif method == 'analytic_TrialByTrial' or method == 'analytic_TrialAverage':
         dist_exp, n_exp = gen_pval_anal(mat, N, pattern_hash, method)
     pval = dist_exp(n_emp)
@@ -750,7 +753,6 @@ def unitary_event_analysis(
     ---------
     hash_from_pattern
     inverse_hash_from_pattern
-
     """
     if not isinstance(data[0][0], neo.SpikeTrain):
         raise ValueError(
