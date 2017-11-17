@@ -1,19 +1,17 @@
-Guidelines:
-https://github.com/numpy/numpy/blob/master/doc/
-https://github.com/INM-6/jelephant/blob/master/jelephant/templates/code_style_guideline.py
-
-Example (not sure if applicable within read the docs):
-http://scikit-learn.org/stable/documentation.html 
+*Example on writing a module header*
+Explain method in detail
+Include figures where appropriate
+Author Contributions as section-title: one sentence per contribution
 
 
-Rules regarding ChannelIndex and AnalogSignal:
+*Rules regarding ChannelIndex and AnalogSignal:*
 Use one AnalogSignal unless 
 Function works with signals of different length
 Function can’t be replaced with a for loop, e.g. [f(x) for x in list],
 Or equivalent constructs,  sum([...]), … 
 
 
-Parameter
+*Parameter naming conventions*
 spiketrains or spiketrain, not sts or st
 binsize
 Write full names 
@@ -26,7 +24,7 @@ Possible to leave out the names for parameter, e.g., Return int? (numpy doc says
 Use x_x notation for names not CamelCase or similar
 Remove xrange patch in asset, instead use xrange function from the six package
 
-Documentation
+*Documentation*
 neo.AnalogSinal or neo.core.AnalogSinal,  numpy.ndarray, quantities.Quantity
 List of neo.AnalogSignal or List of neo.AnalogSignal objects 
 Do not reference hidden functions
@@ -51,17 +49,7 @@ Use full names when import … as (exclude standardized names e.g. pq, np)
 n_xxx is alright if n is the number of xxx 
 
 
-
-
-Example Unitary Events (UE)
-Module Header
-Explain UE in detail
-Include figures
-Author Contributions as section-title: one sentence per contribution
-
-
-*Docstrings:*
-
+*Conventions on writing docstrings*
 How to declare particular properties of a parameter
 min_spikes: int (positive)
 
@@ -364,3 +352,14 @@ def another_top_level_function(param):
     The same docstring guidelines as in the class above.
     """
     pass
+
+    
+*Links to other documentation resources*
+
+Numpy guidelines:
+https://github.com/numpy/numpy/blob/master/doc/
+
+Good example for documentation:
+http://scikit-learn.org/stable/documentation.html 
+
+    
