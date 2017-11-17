@@ -8,6 +8,8 @@ the neurons see [#Gruen99]_.
 
 Detailed introduction and tutorial of method goes here.
 
+:ref:`Tutorial on using Unitary Events <ipynb/unitary_events.ipynb>`
+
 **References:**
 
 .. [#Gruen99] Gruen S, Diesmann M, Grammont F, Riehle A, Aertsen A (1999) TITLE 
@@ -704,18 +706,17 @@ def unitary_event_analysis(
            by their hash values as returned by the function
            `hash_from_pattern` (see also function `inverse_hash_from_pattern`).
     method: string
-            Method to calculate the Unitary Events.
-            'analytic_TrialByTrial':
-                calculate the expectancy (analytically) on each trial, then sum
-                over all trials.
-            'analytic_TrialAverage':
-                calculate the expectancy by averaging over trials.
-                (cf. Gruen et al. 2003)
-            'surrogate_TrialByTrial':
-                calculate the distribution of expected coincidences by spike
-                time randomization in each trial and sum over trials.
+        Method to calculate the Unitary Events.
 
-            Default:'analytic_trialByTrial'
+        * 'analytic_TrialByTrial': calculate the expectancy (analytically) on
+          each trial, then sum over all trials.
+        * 'analytic_TrialAverage': calculate the expectancy by averaging over
+          trials (cf. Gruen et al. 2003).
+        * 'surrogate_TrialByTrial': calculate the distribution of expected
+          coincidences by spike time randomization in each trial and sum over
+          trials.
+
+        Default: 'analytic_trialByTrial'
     t_start: None or Quantity scalar (unit time)
              The start time of the analysis. #TODO position of window?
              If **None**, retrieved from the `t_start` attribute of the
