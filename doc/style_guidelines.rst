@@ -1,6 +1,7 @@
 *Example on writing a module header*
 Explain method in detail
 Include figures where appropriate
+References: should include DOI, and link to publication
 Author Contributions as section-title: one sentence per contribution
 
 

@@ -6,6 +6,8 @@ Unitary Event (UE) analysis is a statistical method that
  spike coincidences (precision of a few ms) to the expected number
  based on the firing rates of the neurons.
 
+Detailed introduction and tutorial of method goes here.
+
 References:
   - Gruen, Diesmann, Grammont, Riehle, Aertsen (1999) J Neurosci Methods,
     94(1): 67-79.
@@ -18,7 +20,7 @@ References:
 Author Contributions:
  - Vahid Rostami (VH)
  - Sonja Gruen (SG)
- - Markus Diesmann  (MD)
+ - Markus Diesmann (MD)
 VH implemented the method, SG and MD provided input
 
 
