@@ -10,6 +10,7 @@ dependencies:
 - numpy=1.10.4=py35_0
 - numpydoc=0.5=py35_1
 - openssl=1.0.2g=0
+- pandoc
 - pip=8.1.1=py35_0
 - pygments=2.1.1=py35_0
 - python=3.5.1=0
@@ -28,7 +29,7 @@ dependencies:
 - xz=5.0.5=1
 - zlib=1.2.8=0
 - pip:
-  - https://github.com/NeuralEnsemble/python-neo/archive/snapshot-20150821.zip
+  - python-neo
   - quantities
   - sphinx-rtd-theme==0.1.9
- 
+  - sphinx_bootstrap_theme 
