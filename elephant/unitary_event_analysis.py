@@ -1,21 +1,27 @@
 # -*- coding: utf-8 -*-
 """
 Unitary Event (UE) analysis is a statistical method that
- enables to analyze in a time resolved manner excess spike correlation
- between simultaneously recorded neurons by comparing the empirical
- spike coincidences (precision of a few ms) to the expected number
- based on the firing rates of the neurons.
+enables to analyze in a time resolved manner excess spike correlation between
+simultaneously recorded neurons by comparing the empirical spike coincidences
+(precision of a few ms) to the expected number based on the firing rates of
+the neurons see [#Gruen99]_.
 
 Detailed introduction and tutorial of method goes here.
 
-References:
-  - Gruen, Diesmann, Grammont, Riehle, Aertsen (1999) J Neurosci Methods,
-    94(1): 67-79.
-  - Gruen, Diesmann, Aertsen (2002a,b) Neural Comput, 14(1): 43-80; 81-19.
-  - Gruen S, Riehle A, and Diesmann M (2003) Effect of cross-trial
-    nonstationarity on joint-spike events Biological Cybernetics 88(5):335-351.
-  - Gruen S (2009) Data-driven significance estimation of precise spike
-    correlation. J Neurophysiology 101:1126-1140 (invited review)
+**References:**
+
+.. [#Gruen99] Gruen S, Diesmann M, Grammont F, Riehle A, Aertsen A (1999) TITLE 
+   J Neurosci Methods, 94(1): 67-79.
+.. [#Gruen02a] Gruen S, Diesmann M, Aertsen A (2002) TITLE Neural Comput, 14(1):
+   43-80.
+.. [#Gruen02b] Gruen S, Diesmann M, Aertsen A (2002) TITLE Neural Comput, 14(1):
+   81-19.
+.. [#Gruen03] Gruen S, Riehle A, and Diesmann M (2003) Effect of cross-trial
+   nonstationarity on joint-spike events. Biological Cybernetics 88(5):335-351
+.. [#Gruen09] Gruen S (2009) Data-driven significance estimation of precise
+   spike correlation. J Neurophysiology 101:1126-1140 (invited review).
+
+
 
 Author Contributions:
  - Vahid Rostami (VH)
