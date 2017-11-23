@@ -35,7 +35,8 @@ sys.path.insert(0, '..')
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.intersphinx',
               'sphinx.ext.todo', 'sphinx.ext.imgmath',
-              'sphinx.ext.viewcode', 'numpydoc', 'nbsphinx']
+              'sphinx.ext.viewcode', 'numpydoc', 'nbsphinx',
+              'IPython.sphinxext.ipython_console_highlighting'] # can be removed in future, see http://nbsphinx.readthedocs.io/en/latest/installation.html
 
 nbsphinx_execute = 'never'
 # Add any paths that contain templates here, relative to this directory.
