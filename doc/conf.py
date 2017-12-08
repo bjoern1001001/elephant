@@ -13,7 +13,7 @@
 
 import sys, os
 
-# custom themes
+# Custom themes
 import sphinx_bootstrap_theme
 # import jupyter_sphinx_theme
 
@@ -38,7 +38,6 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.intersphin
               'sphinx.ext.viewcode', 'numpydoc', 'nbsphinx',
               'IPython.sphinxext.ipython_console_highlighting'] # can be removed in future, see http://nbsphinx.readthedocs.io/en/latest/installation.html
 
-nbsphinx_execute = 'never'
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -99,8 +98,9 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
-# Options for Jupyter notebook on Sphinx
-nbsphinx_execute = 'never'
+# Only execute Jupyter notebooks that have no evaluated cells
+nbsphinx_execute = 'auto'
+nbsphinx_kernel_name = "python2"
 
 # -- Options for HTML output ---------------------------------------------------
 

@@ -718,11 +718,12 @@ def unitary_event_analysis(
 
         Default: 'analytic_trialByTrial'
     t_start: None or Quantity scalar (unit time)
-             The start time of the analysis. #TODO position of window?
-             If **None**, retrieved from the `t_start` attribute of the
-             `SpikeTrain` object.
+    	The start time of the analysis. #TODO position of window?
+        If **None**, retrieved from the `t_start` attribute of the
+        `SpikeTrain` object.
+        
+        Default: None.
 
-            Default: None.
     t_stop: None or Quantity scalar, optional
             The stop time of the analysis.
             If **None**, retrieved from the `t_stop` attribute of the

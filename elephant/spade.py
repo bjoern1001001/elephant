@@ -1,4 +1,4 @@
-'''
+"""
 SPADE is the combination of a mining technique and multiple statistical tests
 to detect and asses the statistical significance of repeated occurrences of
 spike sequences (spatio-temporal patterns, STP).
@@ -46,7 +46,7 @@ plt.show()
 
 :copyright: Copyright 2017 by the Elephant team, see AUTHORS.txt.
 :license: BSD, see LICENSE.txt for details.
-'''
+"""
 import numpy
 import neo
 import elephant.spike_train_surrogates as surr
