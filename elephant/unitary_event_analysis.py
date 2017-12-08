@@ -8,7 +8,10 @@ the neurons see [#Gruen99]_.
 
 Detailed introduction and tutorial of method goes here.
 
-:ref:`Tutorial on using Unitary Events <ipynb/unitary_events.ipynb>`
+:ref:`Tutorial on using Unitary Events <ipynb/unitary_events.ipynb>` 
+
+.. image:: https://mybinder.org/badge.svg 
+   :target: https://mybinder.org/v2/gh/INM-6/elephant/enh/clean_ue?filepath=doc/ipynb/unitary_events.ipynb
 
 **References:**
 
