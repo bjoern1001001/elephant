@@ -99,8 +99,8 @@ pygments_style = 'sphinx'
 #modindex_common_prefix = []
 
 # Only execute Jupyter notebooks that have no evaluated cells
-nbsphinx_execute = 'never'
-nbsphinx_kernel_name = "python3"
+nbsphinx_execute = 'auto'
+nbsphinx_kernel_name = "python2"
 
 # -- Options for HTML output ---------------------------------------------------
 
