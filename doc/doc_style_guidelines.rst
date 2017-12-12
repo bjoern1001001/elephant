@@ -1,5 +1,5 @@
 =========================
- Documentation guideline
+ Documentation and style guideline
 =========================
 
 .. _example.py: example.py
@@ -11,7 +11,9 @@
 Contents
 ========
 
-
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
 
 For an accompanying example, see `example.py`_.
 
@@ -64,16 +66,17 @@ Sections of a docstring
 
     * The documentation should start with a one line summary of the method.
     * After a blank line, a more detailed description follows. Implementation details should be not mentioned here, instead refer to the *Notes* section. 
-    * Parameters describe the function arguments, keywords and respective types ::
-	""" |br|
-	Parameters |br|
-	----------  |br|
-	spiketrains: list of neo.SpikeTrain objects. |br|
-	The input is a list of neo.SpikeTrain objects. |br|
-	    
-	"""
-	
-    * Here are some examples 
+    * Parameters describe the function arguments, keywords and respective types
+    .. code-block:: python
+
+        """
+        Parameters
+        ----------
+        spiketrains: list of neo.SpikeTrain objects.
+            The input is a list of neo.SpikeTrain objects.
+
+        """
+|br|
     * For more sections please have a look at the `Numpy doc guidelines <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#sections>`_ and our `example.py`_.
 
 
@@ -93,7 +96,7 @@ Conventions on writing docstrings
 
 
 Style conventions
-=====================
+=================
 
     * Indentation: 4 spaces (no tabs!)
     * Blank lines: 2 lines between classes and top level functions, otherwise 1 line.
@@ -107,14 +110,16 @@ Style conventions
 
       * For functions that take arguments which can have not only a type ndarray, but  also types that can be converted to an `ndarray` (i.e. scalar types, sequence types), those arguments can be documented with type `array_like`.
 
+    .. code-block:: python
 
-    #==============================================================================
-    # Large blocks of code may be indicated by block comments |br|
-    # For example, you might want to separate public from private functions in your |br|
-    # code or otherwise distinguish larger logically disjunct code segments in a |br|
-    # single file. Block comments can contain a single line, or several lines such |br|
-    # as this comment. 
-    #==============================================================================
+        #==============================================================================
+        # Large blocks of code may be indicated by block comments
+        # For example, you might want to separate public from private functions in your
+        # code or otherwise distinguish larger logically disjunct code segments in a
+        # single file. Block comments can contain a single line, or several lines such
+        # as this comment.
+        #==============================================================================
+|br|
 
 
 Modules
@@ -128,17 +133,18 @@ Modules
       
       * Do not abbreviate scipy
       * Do not import using \*, e.g. ``from numpy import *``
-      * Import strucure: ::
-	
-	  import scipy
-	  import matplotlib.pyplot as plt
-	  import numpy as np
+      * Import strucure:
 
-	  from numpy.random import normal
+    .. code-block:: python
+
+        import scipy
+        import matplotlib.pyplot as plt
+        import numpy as np
+        from numpy.random import normal
 
 
 Parameter
-e^^^^^^^^^
+^^^^^^^^^
     * Always try to find meaningful names.
     * Names such as  `n_spiketrains` are alright if `n` is indicating a number. 
     * List of neo.AnalogSignal or List of neo.AnalogSignal objects      
@@ -152,9 +158,9 @@ e^^^^^^^^^
 
 
 
-**Rules regarding ChannelIndex and AnalogSignal:**
-   * Use one AnalogSignal unless: 
+    **Rules regarding ChannelIndex and AnalogSignal:**
+       * Use one AnalogSignal unless:
 
-     * Function works with signals of different length
-     * Function can’t be replaced with a for loop, e.g. ``[f(x) for x in list]``,
-     * Or equivalent constructs,  ``sum([...])``
+         * Function works with signals of different length
+         * Function can’t be replaced with a for loop, e.g. ``[f(x) for x in list]``,
+         * Or equivalent constructs,  ``sum([...])``

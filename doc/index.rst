@@ -24,6 +24,7 @@ Table of Contents
     tutorial
     modules
     developers_guide
+    doc_style_guidelines
     authors
     release_notes
 
