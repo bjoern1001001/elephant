@@ -2,7 +2,7 @@
  Documentation and style guideline
 =========================
 
-.. _example.py: example.py
+.. _example.py: doc_style_guidelines_example.rst
 .. |br| raw:: html
 
    <br />
@@ -15,7 +15,7 @@ Contents
    :depth: 2
    :local:
 
-For an accompanying example, see `example.py`_.
+For an accompanying example, see :ref:`docstyle-examples`.
 
 
 Overview
