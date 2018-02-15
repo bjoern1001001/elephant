@@ -1,6 +1,6 @@
 # These are requirements only needed for the jupyter notebooks of the docs
 pip install matplotlib
-pip install pytables
+pip install tables
 
 # Install elephant
 python setup.py install
