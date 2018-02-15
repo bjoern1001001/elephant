@@ -1,6 +1,7 @@
 # These are requirements only needed for the jupyter notebooks of the docs
 pip install matplotlib
 pip install tables
+pip install h5py
 
 # Install elephant
 python setup.py install
