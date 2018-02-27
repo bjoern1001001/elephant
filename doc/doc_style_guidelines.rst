@@ -145,13 +145,13 @@ Modules
 
 Parameter
 ^^^^^^^^^
-    * Always try to find meaningful names.
-    * Names such as  `n_spiketrains` are alright if `n` is indicating a number. 
-    * List of neo.AnalogSignal or List of neo.AnalogSignal objects      
-    * How to declare particular properties of a parameter.
+* Always try to find meaningful names.
+* Names such as  `n_spiketrains` are alright if `n` is indicating a number. 
+* List of neo.AnalogSignal or List of neo.AnalogSignal objects      
+* How to declare particular properties of a parameter.
 
       * min_spikes: int (positive)
-
+	
 * How to state that a parameter has a certain value.
 
   * If n_subset is set to 0 (not if n_subset==0).
