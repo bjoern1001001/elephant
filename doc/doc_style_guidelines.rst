@@ -23,17 +23,17 @@ Overview
 
 **We mostly follow the standard Python style conventions as described here:**
 
-     * `Style Guide for Python Code <http://python.org/dev/peps/pep-0008/>`_.
-     * `Docstring Conventions <http://python.org/dev/peps/pep-0257/>`_.
-     * `Numpy doc <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_
+* `Style Guide for Python Code <http://python.org/dev/peps/pep-0008/>`_.
+* `Docstring Conventions <http://python.org/dev/peps/pep-0257/>`_.
+* `Numpy doc <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_
 
 **You can use a code checker to format your code:**
 
-    * `pylint <http://www.logilab.org/857>`_.
-    * `pyflakes <https://pypi.python.org/pypi/pyflakes>`_.
-    * `pep8.py <http://svn.browsershots.org/trunk/devtools/pep8/pep8.py>`_.
-    * `flake8 <https://pypi.python.org/pypi/flake8>`_.
-    * Or use the auto-organizer of your editor.
+* `pylint <http://www.logilab.org/857>`_.
+* `pyflakes <https://pypi.python.org/pypi/pyflakes>`_.
+* `pep8.py <http://svn.browsershots.org/trunk/devtools/pep8/pep8.py>`_.
+* `flake8 <https://pypi.python.org/pypi/flake8>`_.
+* Or use the auto-organizer of your editor.
 
 
 Documentation standards
