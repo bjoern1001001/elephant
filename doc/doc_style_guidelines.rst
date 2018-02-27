@@ -55,18 +55,18 @@ A documentation string (docstring) is a string that describes a module, function
 Writing a module header
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-    * Explain the method in detail
-    * Include figures where appropriate
-    * References: should include DOI, and link to publication with DOI if possible
-    * Author Contributions as section-title: one sentence per contribution
+* Explain the method in detail
+* Include figures where appropriate
+* References: should include DOI, and link to publication with DOI if possible
+* Author Contributions as section-title: one sentence per contribution
       
 
 Sections of a docstring
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-    * The documentation should start with a one line summary of the method.
-    * After a blank line, a more detailed description follows. Implementation details should be not mentioned here, instead refer to the *Notes* section. 
-    * Parameters describe the function arguments, keywords and respective types
+* The documentation should start with a one line summary of the method.
+* After a blank line, a more detailed description follows. Implementation details should be not mentioned here, instead refer to the *Notes* section. 
+* Parameters describe the function arguments, keywords and respective types
     .. code-block:: python
 
         """
@@ -77,38 +77,38 @@ Sections of a docstring
 
         """
 |br|
-    * For more sections please have a look at the `Numpy doc guidelines <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#sections>`_ and our `example.py`_.
+* For more sections please have a look at the `Numpy doc guidelines <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#sections>`_ and our `example.py`_.
 
 
 Conventions on writing docstrings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    * Functions should have meaningful names.
-    * Variable, module, function, and class names should be written between single back-ticks (`numpy`), NOT *bold*.
-    * References should go into the field References.
-    * Code examples should go to the `Examples` section.
-    * Examples should be runnable (and complete), you can test them with `doctest <https://docs.python.org/3/library/doctest.html>`_
-    * Code references should go to the `Notes section`  or as a last short sentence in the main top documentation of the function.
-    * Do not reference hidden functions.
-    * If an argument has a `Default` value specify it as ``Default is ...`` at the end of the description.
-    * You do not need to cite the same references in the module twice or more.
+* Functions should have meaningful names.
+* Variable, module, function, and class names should be written between single back-ticks (`numpy`), NOT *bold*.
+* References should go into the field References.
+* Code examples should go to the `Examples` section.
+* Examples should be runnable (and complete), you can test them with `doctest <https://docs.python.org/3/library/doctest.html>`_
+* Code references should go to the `Notes section`  or as a last short sentence in the main top documentation of the function.
+* Do not reference hidden functions.
+* If an argument has a `Default` value specify it as ``Default is ...`` at the end of the description.
+* You do not need to cite the same references in the module twice or more.
   
 
 
 Style conventions
 =================
 
-    * Indentation: 4 spaces (no tabs!)
-    * Blank lines: 2 lines between classes and top level functions, otherwise 1 line.
-    * Line width: 79 characters.
-    * Prefer comments written above the code, not behind the code.
-    * Classes need 2 blank lines between any (text/code) structure.
-    * Classes use CamelCase notation, e.g. ``MyClass``, whereas function or methods use underscores ``my_function``. 
+* Indentation: 4 spaces (no tabs!)
+* Blank lines: 2 lines between classes and top level functions, otherwise 1 line.
+* Line width: 79 characters.
+* Prefer comments written above the code, not behind the code.
+* Classes need 2 blank lines between any (text/code) structure.
+* Classes use CamelCase notation, e.g. ``MyClass``, whereas function or methods use underscores ``my_function``. 
 
 
-    * Convention of array_like:
+* Convention of array_like:
 
-      * For functions that take arguments which can have not only a type ndarray, but  also types that can be converted to an `ndarray` (i.e. scalar types, sequence types), those arguments can be documented with type `array_like`.
+  * For functions that take arguments which can have not only a type ndarray, but  also types that can be converted to an `ndarray` (i.e. scalar types, sequence types), those arguments can be documented with type `array_like`.
 
     .. code-block:: python
 
@@ -124,16 +124,16 @@ Style conventions
 
 Modules
 ^^^^^^^
-    * Module / Package naming convention: short, small letters, no underscores (reason: reduce typing effort) 
+* Module / Package naming convention: short, small letters, no underscores (reason: reduce typing effort) 
       
-      * Good examples: elephant, analysis, core, sta, ue, worms, surrogate
-      * Bad examples:  STA, StaAnalysis, UE_analysis, UEanalysis, UEAnalysis, mySuperAnalysis
+  * Good examples: elephant, analysis, core, sta, ue, worms, surrogate
+    * Bad examples:  STA, StaAnalysis, UE_analysis, UEanalysis, UEAnalysis, mySuperAnalysis
 
-    * Importing modules
+  * Importing modules
       
-      * Do not abbreviate scipy
-      * Do not import using \*, e.g. ``from numpy import *``
-      * Import strucure:
+    * Do not abbreviate scipy
+    * Do not import using \*, e.g. ``from numpy import *``
+    * Import strucure:
 
     .. code-block:: python
 
@@ -152,15 +152,15 @@ Parameter
 
       * min_spikes: int (positive)
 
-    * How to state that a parameter has a certain value.
+* How to state that a parameter has a certain value.
 
-      * If n_subset is set to 0 (not if n_subset==0).
+  * If n_subset is set to 0 (not if n_subset==0).
 
 
 
-    **Rules regarding ChannelIndex and AnalogSignal:**
-       * Use one AnalogSignal unless:
-
-         * Function works with signals of different length
-         * Function can’t be replaced with a for loop, e.g. ``[f(x) for x in list]``,
-         * Or equivalent constructs,  ``sum([...])``
+**Rules regarding ChannelIndex and AnalogSignal:**
+* Use one AnalogSignal unless:
+      
+  * Function works with signals of different length
+    * Function can’t be replaced with a for loop, e.g. ``[f(x) for x in list]``,
+    * Or equivalent constructs,  ``sum([...])``
