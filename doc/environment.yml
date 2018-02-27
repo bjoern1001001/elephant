@@ -29,7 +29,7 @@ dependencies:
 - xz=5.0.5=1
 - zlib=1.2.8=0
 - pip:
-  - python-neo
+  - neo
   - quantities
   - sphinx-rtd-theme==0.1.9
   - sphinx_bootstrap_theme 
