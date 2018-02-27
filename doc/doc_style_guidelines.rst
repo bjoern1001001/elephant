@@ -1,8 +1,8 @@
-=========================
+==================================
  Documentation and style guideline
-=========================
+==================================
 
-.. _example.py: doc_style_guidelines_example.rst
+.. _example.py: example.py
 .. |br| raw:: html
 
    <br />
@@ -15,7 +15,7 @@ Contents
    :depth: 2
    :local:
 
-For an accompanying example, see :ref:`docstyle-examples`.
+For an accompanying example, see `example.py`_.
 
 
 Overview
