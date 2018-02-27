@@ -77,6 +77,7 @@ Sections of a docstring
 
         """
 |br|
+
 * For more sections please have a look at the `Numpy doc guidelines <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#sections>`_ and our `example.py`_.
 
 
