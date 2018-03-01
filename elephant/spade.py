@@ -63,7 +63,7 @@ except ImportError:  # pragma: no cover
     HAVE_MPI = False
 
 try:
-    import fim
+    from elephant.spade_src import fim
     HAVE_FIM = True
     # raise ImportError
 except ImportError:  # pragma: no cover
@@ -342,7 +342,7 @@ def spade(data, binsize, winlen, min_spikes=2, min_occ=2, min_neu=1,
                                                  min_spikes=min_spikes,
                                                  min_occ=min_occ)
         # Storing patterns
-        if output_format == 'patterns' and n_surr > 0:
+        if output_format == 'patterns':
             # If the p-value spectra was not computed, is set to an empty list
             if n_surr == 0:
                 pv_spec = []
@@ -441,13 +441,15 @@ def concepts_mining(data, binsize, winlen, min_spikes=2, min_occ=2,
     # objects (window positions) and attributes (spikes,
     # indexed with a number equal to  neuron idx*winlen+bin idx)
     context, transactions, rel_matrix = _build_context(binary_matrix, winlen)
-    # By default, set the maximum pattern size to the number of spiketrains
+    # By default, set the maximum pattern size to the maximum number of
+    # spikes in a window
     if max_spikes is None:
-        max_spikes = np.max(np.sum(binary_matrix, axis=-1)) + 1
-    # By default set maximum number of data to number of bins
+        max_spikes = int(np.max(np.sum(rel_matrix, axis=1)))
+    # By default, set maximum number of occurrences to number of non-empty
+    # windows
     if max_occ is None:
-        max_occ = np.max(np.sum(binary_matrix, axis=1)) + 1
-    # check if fim.so available and use it
+        max_occ = int(np.sum(np.sum(rel_matrix, axis=1)>0))
+    # Check if fim.so available and use it
     if HAVE_FIM:
         # Return the output
         mining_results = _fpgrowth(
@@ -1429,11 +1431,12 @@ def pattern_set_reduction(concepts, excluded, winlen, h=0, k=0, l=0, min_spikes=
     # scan all conc and their subsets
     for id1, (conc1, s_times1, winds1, count1) in enumerate(conc):
         for id2, (conc2, s_times2, winds2, count2) in enumerate(conc):
+            if id1 == id2:
+                continue
             # Collecting all the possible distances between the windows
             # of the two concepts
             time_diff_all = np.array(
-                [w2 - min(winds1) for w2 in winds2] + [
-                    min(winds2) - w1 for w1 in winds1])
+                [w2 - w1 for w2 in winds2 for w1 in winds1])
             sorted_time_diff = np.unique(
                 time_diff_all[np.argsort(np.abs(time_diff_all))])
             # Rescaling the spike times to realign to real time
