@@ -16,6 +16,7 @@ nosetests.xml
 .settings
 *.tmp*
 .idea
+.cache
 
 # Compiled source #
 ###################
@@ -41,6 +42,7 @@ lib
 lib64
 # sphinx build directory
 doc/_build
+doc/source
 # setup.py dist directory
 dist
 sdist
@@ -58,6 +60,8 @@ develop-eggs
 pip-log.txt
 # coverage
 cover
+# ipython notebooks
+.ipynb_checkpoints
 
 # OS generated files #
 ######################
